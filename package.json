@@ -1,0 +1,45 @@
+{
+  "name": "v-farms",
+  "version": "0.1.0",
+  "private": true,
+  "description": "V-Farms exclusive whole-property stays and private events — Hyderabad",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "ci": "npm run lint && npm run typecheck && npm run test"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.8.0",
+    "@supabase/supabase-js": "^2.117.3",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.544.0",
+    "next": "^16.4.0",
+    "razorpay": "^2.9.8",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "resend": "^6.32.1",
+    "tailwind-merge": "^3.4.0",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@playwright/test": "^1.56.1",
+    "@tailwindcss/postcss": "^4.1.16",
+    "@types/node": "^24.9.1",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "eslint": "^9.38.0",
+    "eslint-config-next": "^16.0.0",
+    "ffmpeg-static": "^5.2.0",
+    "jsdom": "^27.0.1",
+    "tailwindcss": "^4.1.16",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.8"
+  }
+}

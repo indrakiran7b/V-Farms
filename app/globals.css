@@ -1,0 +1,103 @@
+@import "tailwindcss";
+
+:root {
+  --forest-950: #07110c;
+  --forest-900: #0e1c14;
+  --forest-800: #163024;
+  --forest-700: #1f4633;
+  --forest-600: #2c5c43;
+  --ivory-50: #fbf7ef;
+  --ivory-100: #f4ecde;
+  --ivory-200: #e6d8c0;
+  --earth-700: #5a4030;
+  --earth-800: #3d2b20;
+  --pink-400: #c45c7a;
+  --pink-300: #d98aa0;
+  --gold-400: #c4ae7a;
+  --ink: #1b1712;
+  --muted: #6b6256;
+  background: var(--ivory-50);
+  color: var(--ink);
+}
+
+@theme inline {
+  --color-forest-950: var(--forest-950);
+  --color-forest-900: var(--forest-900);
+  --color-forest-800: var(--forest-800);
+  --color-forest-700: var(--forest-700);
+  --color-forest-600: var(--forest-600);
+  --color-ivory-50: var(--ivory-50);
+  --color-ivory-100: var(--ivory-100);
+  --color-ivory-200: var(--ivory-200);
+  --color-earth-700: var(--earth-700);
+  --color-earth-800: var(--earth-800);
+  --color-pink-400: var(--pink-400);
+  --color-pink-300: var(--pink-300);
+  --color-gold-400: var(--gold-400);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --font-serif: var(--font-serif);
+  --font-sans: var(--font-sans);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--ivory-50);
+  color: var(--ink);
+  font-family: var(--font-sans), sans-serif;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--pink-400) 28%, white);
+}
+
+a {
+  color: inherit;
+}
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -4rem;
+  z-index: 80;
+  background: var(--ivory-50);
+  padding: 0.6rem 1rem;
+}
+
+.skip-link:focus {
+  top: 1rem;
+}
+
+.botanical-surface {
+  background:
+    radial-gradient(1200px 700px at 80% -10%, rgba(196, 174, 122, 0.12), transparent 50%),
+    radial-gradient(900px 600px at -10% 110%, rgba(196, 92, 122, 0.1), transparent 45%),
+    linear-gradient(165deg, #0b1711 0%, #13261b 48%, #1a1a12 100%);
+}
+
+.hairline {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(196, 174, 122, 0.55), transparent);
+}

@@ -31,7 +31,6 @@ const propertyGallery = [
   ['night view.png', 'Evening atmosphere', 'The estate glowing after dark, seen from above.', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/night%20view-EAZVyWZn2fMZ0FGGJj6wBblUnjZd2P.png'],
   ['dragon fruit farm.png', 'Farm and nature', 'Dragon fruit rows stretching across the surrounding farmland.', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/dragon%20fruit%20farm.png-p4xxhD5oR2gHhJ6J0hfMvdMc79CFF7.jpeg'],
   ['IMG_6036.PNG', 'Evening atmosphere', 'Colourful illuminated outdoor feature at the estate.', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/IMG_6036.PNG-OMeP7rkmXZOkXlGl0E2ZNRqqT49l8a.jpeg'],
-  ['WhatsApp Image 2026-10-13 at 13.14.48.jpeg', 'Evening atmosphere', 'Colourful illuminated outdoor feature at night.', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202026-10-13%20at%2013.14.48-QmVyOmygpsP7WNSYnptzV5KNbfGB2N.jpeg'],
 ]
 
 function Gallery({ onOpen }: { onOpen: (index: number) => void }) {

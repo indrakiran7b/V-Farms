@@ -1,6 +1,7 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
+import './admin/admin.css'
 
 export const metadata: Metadata = {
   title: 'V-Farms | A singular escape to nature',

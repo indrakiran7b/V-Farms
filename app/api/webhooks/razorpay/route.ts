@@ -22,7 +22,28 @@ export async function POST(request: Request) {
       if (payment && entity.amount === payment.expected_amount_paise && entity.currency === payment.currency) {
         const status = payload.event === 'payment.captured' ? 'captured' : payload.event === 'payment.failed' ? 'failed' : 'pending'
         await supabase.from('payments').update({ razorpay_payment_id: entity.id, captured_amount_paise: entity.amount, payment_status: status, verification_status: 'verified' }).eq('id', payment.id)
-        if (status === 'captured') await supabase.from('stay_bookings').update({ booking_status: 'confirmed', payment_status: 'captured' }).eq('id', payment.booking_id).eq('booking_status', 'held')
+        if (status === 'captured') {
+          const { data: confirmedBooking, error: bookingError } = await supabase
+            .from('stay_bookings')
+            .update({ booking_status: 'confirmed', payment_status: 'captured' })
+            .eq('id', payment.booking_id)
+            .eq('booking_status', 'held')
+            .select('id')
+            .maybeSingle()
+          if (bookingError) throw bookingError
+
+          if (confirmedBooking) {
+            const notificationRows = ['email', 'sms'].map((channel) => ({
+              booking_id: confirmedBooking.id,
+              channel,
+              idempotency_key: `booking-confirmed:${confirmedBooking.id}:${channel}`,
+            }))
+            const { error: notificationError } = await supabase
+              .from('booking_notifications')
+              .upsert(notificationRows, { onConflict: 'idempotency_key', ignoreDuplicates: true })
+            if (notificationError) throw notificationError
+          }
+        }
       }
     }
     await supabase.from('payment_webhook_events').update({ processing_status: 'processed', processed_at: new Date().toISOString() }).eq('provider_event_id', eventId)

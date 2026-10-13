@@ -1,2 +1,6 @@
-import AdminComingSoon from '@/components/admin-coming-soon'
-export default function Page() { return <AdminComingSoon title="Pricing" description="Pricing management will preserve immutable booking price snapshots and use the existing quote logic." /> }
+import { adminSupabase } from '@/lib/booking'
+
+export default async function Page() {
+  const { data, error } = await adminSupabase().from('pricing_rules').select('id, name, start_date, end_date, nightly_paise, minimum_nights, active, updated_at').order('active', { ascending: false }).order('start_date')
+  return <main className="admin-content"><div className="admin-heading"><div><p className="admin-kicker">Revenue controls</p><h1>Pricing</h1><p className="admin-muted">Review active and scheduled nightly pricing rules used for future quoting.</p></div></div>{error ? <div className="admin-alert">Unable to load pricing rules.</div> : <section className="admin-panel"><div className="admin-table-wrap"><table><thead><tr>{['name','start_date','end_date','nightly_paise','minimum_nights','active','updated_at'].map(column => <th key={column}>{column.replaceAll('_', ' ')}</th>)}</tr></thead><tbody>{data?.map(item => <tr key={item.id}><td>{item.name}</td><td>{item.start_date || 'Any'}</td><td>{item.end_date || 'Any'}</td><td>₹{(Number(item.nightly_paise) / 100).toLocaleString('en-IN')}</td><td>{item.minimum_nights}</td><td><span className={`admin-status ${item.active ? 'published' : 'draft'}`}>{item.active ? 'active' : 'inactive'}</span></td><td>{new Date(item.updated_at).toLocaleDateString('en-IN')}</td></tr>)}</tbody></table></div>{!data?.length && <div className="admin-empty">No pricing rules have been added.</div>}</section>}</main>
+}

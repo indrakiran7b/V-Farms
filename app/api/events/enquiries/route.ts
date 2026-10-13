@@ -28,7 +28,7 @@ async function requireAdmin() {
 export async function GET() {
   const admin = await requireAdmin()
   if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const { data, error } = await admin.db.from('event_enquiries').select('id,reference,event_date,guest_count,contact_name,contact_email,contact_phone,requirements,status,internal_notes,created_at,updated_at,event_quotes(id,version,subtotal_paise,deposit_paise,currency,status,terms,created_at,accepted_at),event_audit_logs(id,action,details,created_at)').order('created_at', { ascending: false }).limit(100)
+  const { data, error } = await admin.db.from('event_enquiries').select('id,reference,event_date,guest_count,contact_name,contact_email,contact_phone,requirements,status,internal_notes,created_at,updated_at,event_quotes(id,version,subtotal_inr,deposit_inr,currency,status,terms,created_at,accepted_at),event_audit_logs(id,action,details,created_at)').order('created_at', { ascending: false }).limit(100)
   if (error) return NextResponse.json({ error: 'Unable to load event enquiries' }, { status: 500 })
   return NextResponse.json({ enquiries: data ?? [] })
 }
@@ -65,7 +65,7 @@ export async function PUT(request: Request) {
     const input = z.object({ enquiryId: z.string().uuid(), subtotalPaise: z.number().int().min(0), depositPaise: z.number().int().min(0), terms: z.string().trim().max(5000).default('') }).parse(await request.json())
     const { data: latest } = await admin.db.from('event_quotes').select('version').eq('enquiry_id', input.enquiryId).order('version', { ascending: false }).limit(1).maybeSingle()
     const version = (latest?.version ?? 0) + 1
-    const { data, error } = await admin.db.from('event_quotes').insert({ enquiry_id: input.enquiryId, version, subtotal_paise: input.subtotalPaise, deposit_paise: input.depositPaise, terms: input.terms }).select('*').single()
+    const { data, error } = await admin.db.from('event_quotes').insert({ enquiry_id: input.enquiryId, version, subtotal_inr: input.subtotalPaise, deposit_inr: input.depositPaise, terms: input.terms }).select('*').single()
     if (error) return NextResponse.json({ error: 'Unable to create quote' }, { status: 500 })
     await admin.db.from('event_enquiries').update({ status: 'quoted' }).eq('id', input.enquiryId)
     await admin.db.from('event_audit_logs').insert({ enquiry_id: input.enquiryId, action: 'quote_created', details: { version, actor: admin.user.id } })

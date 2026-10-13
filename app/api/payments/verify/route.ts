@@ -21,14 +21,14 @@ export async function POST(request: Request) {
     if (!signaturesMatch(expectedSignature, input.razorpaySignature)) return NextResponse.json({ error: 'Invalid payment signature' }, { status: 400 })
 
     const supabase = adminSupabase()
-    const { data: payment, error: paymentError } = await supabase.from('payments').select('id,booking_id,expected_amount_paise,currency,payment_status').eq('booking_id', input.bookingId).eq('razorpay_order_id', input.razorpayOrderId).single()
+    const { data: payment, error: paymentError } = await supabase.from('payments').select('id,booking_id,expected_amount_inr,currency,payment_status').eq('booking_id', input.bookingId).eq('razorpay_order_id', input.razorpayOrderId).single()
     if (paymentError || !payment) return NextResponse.json({ error: 'Payment order not found' }, { status: 404 })
 
     if (payment.payment_status === 'captured') return NextResponse.json({ status: 'confirmed' })
     if (!process.env.RAZORPAY_KEY_ID) return NextResponse.json({ error: 'Payment gateway is not configured' }, { status: 503 })
     const razorpay = new Razorpay({ key_id: process.env.RAZORPAY_KEY_ID, key_secret: secret })
     const gatewayPayment = await razorpay.payments.fetch(input.razorpayPaymentId)
-    if (gatewayPayment.order_id !== input.razorpayOrderId || gatewayPayment.amount !== payment.expected_amount_paise || gatewayPayment.currency !== payment.currency) return NextResponse.json({ error: 'Payment details did not match the booking' }, { status: 400 })
+    if (gatewayPayment.order_id !== input.razorpayOrderId || gatewayPayment.amount !== Math.round(Number(payment.expected_amount_inr) * 100) || gatewayPayment.currency !== payment.currency) return NextResponse.json({ error: 'Payment details did not match the booking' }, { status: 400 })
     if (gatewayPayment.status !== 'captured') {
       await supabase.from('payments').update({ razorpay_payment_id: input.razorpayPaymentId, verification_status: 'verified', payment_status: gatewayPayment.status === 'failed' ? 'failed' : 'pending' }).eq('id', payment.id)
       return NextResponse.json({ status: 'pending', message: 'Payment is awaiting capture confirmation.' })
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
 
     const { data: hold } = await supabase.from('inventory_holds').select('id').eq('booking_id', input.bookingId).eq('status', 'active').gt('expires_at', new Date().toISOString()).maybeSingle()
     if (!hold) return NextResponse.json({ error: 'Booking hold has expired' }, { status: 409 })
-    await supabase.from('payments').update({ razorpay_payment_id: input.razorpayPaymentId, captured_amount_paise: gatewayPayment.amount, verification_status: 'verified', payment_status: 'captured' }).eq('id', payment.id)
+    await supabase.from('payments').update({ razorpay_payment_id: input.razorpayPaymentId, captured_amount_inr: gatewayPayment.amount / 100, verification_status: 'verified', payment_status: 'captured' }).eq('id', payment.id)
     const { data: confirmedBooking, error: bookingError } = await supabase.from('stay_bookings').update({ booking_status: 'confirmed', payment_status: 'captured' }).eq('id', input.bookingId).eq('booking_status', 'held').select('id').maybeSingle()
     if (bookingError) throw bookingError
     if (confirmedBooking) {

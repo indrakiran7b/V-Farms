@@ -18,10 +18,10 @@ export async function POST(request: Request) {
     if (inserted.error) throw inserted.error
     const entity = payload.payload?.payment?.entity
     if (entity?.order_id) {
-      const { data: payment } = await supabase.from('payments').select('id,booking_id,expected_amount_paise,currency').eq('razorpay_order_id', entity.order_id).single()
-      if (payment && entity.amount === payment.expected_amount_paise && entity.currency === payment.currency) {
+      const { data: payment } = await supabase.from('payments').select('id,booking_id,expected_amount_inr,currency').eq('razorpay_order_id', entity.order_id).single()
+      if (payment && entity.amount === Math.round(Number(payment.expected_amount_inr) * 100) && entity.currency === payment.currency) {
         const status = payload.event === 'payment.captured' ? 'captured' : payload.event === 'payment.failed' ? 'failed' : 'pending'
-        await supabase.from('payments').update({ razorpay_payment_id: entity.id, captured_amount_paise: entity.amount, payment_status: status, verification_status: 'verified' }).eq('id', payment.id)
+        await supabase.from('payments').update({ razorpay_payment_id: entity.id, captured_amount_inr: entity.amount / 100, payment_status: status, verification_status: 'verified' }).eq('id', payment.id)
         if (status === 'captured') {
           const { data: confirmedBooking, error: bookingError } = await supabase
             .from('stay_bookings')

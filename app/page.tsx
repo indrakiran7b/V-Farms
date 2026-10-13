@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState, type FormEvent } from 'react'
-import { ArrowRight, CalendarDays, Menu, Sprout, Users, X } from 'lucide-react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { ArrowRight, CalendarDays, Menu, Pause, Play, Sprout, Users, X } from 'lucide-react'
 
 const rooms = [
   ['The Canopy', 'A comfortable bedroom for a restful stay.', '01', 'bedroom.png'],
@@ -46,6 +46,17 @@ function Lightbox({ index, onClose, onChange }: { index: number; onClose: () => 
   const [name, category, alt, src] = propertyGallery[index]
   useEffect(() => { const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose(); if (event.key === 'ArrowRight') onChange((index + 1) % propertyGallery.length); if (event.key === 'ArrowLeft') onChange((index - 1 + propertyGallery.length) % propertyGallery.length) }; document.addEventListener('keydown', onKey); return () => document.removeEventListener('keydown', onKey) }, [index, onChange, onClose])
   return <div className="lightbox" role="dialog" aria-modal="true" aria-label="Property photograph viewer" onClick={onClose} onTouchStart={event => setStartX(event.changedTouches[0].clientX)} onTouchEnd={event => { if (startX === null) return; const delta = event.changedTouches[0].clientX - startX; if (Math.abs(delta) > 45) onChange((index + (delta < 0 ? 1 : -1) + propertyGallery.length) % propertyGallery.length); setStartX(null) }}><button className="lightbox-close" type="button" onClick={onClose} aria-label="Close photograph viewer">×</button><button className="lightbox-arrow previous" type="button" onClick={event => { event.stopPropagation(); onChange((index - 1 + propertyGallery.length) % propertyGallery.length) }} aria-label="Previous photograph">‹</button><figure onClick={event => event.stopPropagation()}><img src={src} alt={alt} /><figcaption><small>{category}</small><strong>{name.replace(/\.[^.]+$/, '')}</strong></figcaption></figure><button className="lightbox-arrow next" type="button" onClick={event => { event.stopPropagation(); onChange((index + 1) % propertyGallery.length) }} aria-label="Next photograph">›</button></div>
+}
+
+function FeelingVideo() {
+  const [isPlaying, setIsPlaying] = useState(true)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const togglePlayback = () => {
+    const video = videoRef.current
+    if (!video) return
+    if (video.paused) { void video.play(); setIsPlaying(true) } else { video.pause(); setIsPlaying(false) }
+  }
+  return <div className="feeling-video-frame"><video ref={videoRef} className="feeling-video" src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/v-farms-farm-video-under-20mb-o0oHsXElaFyjZOXnUXidSkoSBEFf3U.mp4" poster="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/dragon%20fruit%20farm.png-p4xxhD5oR2gHhJ6J0hfMvdMc79CFF7.jpeg" autoPlay muted loop playsInline aria-label="V-Farms farm and property video" /><button className="video-toggle" type="button" onClick={togglePlayback} aria-label={isPlaying ? 'Pause farm video' : 'Play farm video'}>{isPlaying ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}{isPlaying ? 'Pause' : 'Play'}</button></div>
 }
 
 function BookingSearch() {
@@ -151,7 +162,7 @@ export default function Page() {
         <a href="#story" className="scroll-cue"><span /> Scroll to explore</a>
       </section>
 
-      <section className="intro shell" id="story"><div className="intro-mark"><Sprout aria-hidden="true" /></div><div><p className="eyebrow">The V-Farms feeling</p><h2>Come for the quiet.<br /><em>Stay for the feeling.</em></h2><p className="body-copy">V-Farms is a private five-acre estate shaped by the land around it. A considered place to slow down, share a meal, celebrate something meaningful, or simply wake up somewhere green.</p><a href="#estate" className="text-link">Discover the estate <ArrowRight aria-hidden="true" /></a></div></section>
+      <section className="feeling-video-section shell" id="story"><FeelingVideo /><div className="story-copy"><div className="intro-mark"><Sprout aria-hidden="true" /></div><p className="eyebrow">The V-Farms feeling</p><h2>Come for the quiet.<br /><em>Stay for the feeling.</em></h2><p className="body-copy">V-Farms is a private five-acre estate shaped by the land around it. A considered place to slow down, share a meal, celebrate something meaningful, or simply wake up somewhere green.</p><a href="#estate" className="text-link">Discover the estate <ArrowRight aria-hidden="true" /></a></div></section>
 
       <section className="image-story shell" id="estate"><div className="story-image"><img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/dragon%20fruit%20farm.png-p4xxhD5oR2gHhJ6J0hfMvdMc79CFF7.jpeg" alt="Dragon fruit rows across the V-Farms farmland" /></div><div className="story-copy"><p className="eyebrow">01 / The plantation</p><h2>Rooted in<br /><em>the real.</em></h2><p className="body-copy">There is a particular pleasure in being close to where things grow. Walk between the dragon fruit rows, follow the changing light, and let the day find its own pace.</p><div className="stat-row"><div><strong>05</strong><span>acres of land</span></div><div><strong>01</strong><span>private estate</span></div></div></div></section>
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type FormEvent } from 'react'
 import { ArrowRight, CalendarDays, Menu, Sprout, Users, X } from 'lucide-react'
 
 const rooms = [
@@ -18,16 +18,49 @@ const experiences = [
 ]
 
 function BookingSearch() {
-  const [submitted, setSubmitted] = useState(false)
-  return (
-    <form onSubmit={(event) => { event.preventDefault(); setSubmitted(true) }} className="booking-panel">
-      <div className="booking-field"><CalendarDays aria-hidden="true" /><label htmlFor="check-in">Check in<input id="check-in" type="date" required /></label></div>
-      <div className="booking-field"><CalendarDays aria-hidden="true" /><label htmlFor="check-out">Check out<input id="check-out" type="date" required /></label></div>
-      <div className="booking-field"><Users aria-hidden="true" /><label htmlFor="guests">Guests<select id="guests" defaultValue="2"><option value="2">2 guests</option><option value="4">4 guests</option><option value="6">6 guests</option><option value="8">8 guests</option></select></label></div>
-      <button className="button button-dark" type="submit">Check availability <ArrowRight aria-hidden="true" /></button>
-      {submitted && <p className="booking-note" role="status">Availability search ready — your dates are preserved for the booking flow.</p>}
-    </form>
-  )
+  const [step, setStep] = useState<'search' | 'details' | 'success'>('search')
+  const [dates, setDates] = useState({ checkIn: '', checkOut: '', guests: '2' })
+  const [details, setDetails] = useState({ name: '', email: '', phone: '' })
+  const [quote, setQuote] = useState<{ nights: number; total: number } | null>(null)
+  const [reference, setReference] = useState('')
+  const [message, setMessage] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  async function checkAvailability(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setBusy(true)
+    setMessage('')
+    try {
+      const response = await fetch('/api/bookings/quote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ checkIn: dates.checkIn, checkOut: dates.checkOut, adults: Number(dates.guests), children: 0 }) })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error ?? 'Those dates are not available.')
+      setQuote(data.quote)
+      setStep('details')
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Unable to check those dates.')
+    } finally { setBusy(false) }
+  }
+
+  async function reserveStay(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setBusy(true)
+    setMessage('')
+    try {
+      const response = await fetch('/api/bookings/hold', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ checkIn: dates.checkIn, checkOut: dates.checkOut, adults: Number(dates.guests), children: 0, guestName: details.name, guestEmail: details.email, guestPhone: details.phone, termsAccepted: true }) })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error ?? 'Unable to reserve those dates.')
+      setReference(data.booking.booking_reference)
+      setStep('success')
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Unable to reserve your stay.')
+    } finally { setBusy(false) }
+  }
+
+  if (step === 'success') return <div className="booking-panel booking-success" role="status"><p className="eyebrow">Your dates are held for 15 minutes</p><h3>We&apos;re looking forward to welcoming you.</h3><p>Reference <strong>{reference}</strong>. Our team will be in touch to complete your payment and confirm the stay.</p><button className="text-link" type="button" onClick={() => { setStep('search'); setMessage(''); setReference('') }}>Start another search <ArrowRight aria-hidden="true" /></button></div>
+
+  if (step === 'details') return <form onSubmit={reserveStay} className="booking-panel booking-details"><div className="booking-summary"><p className="eyebrow">{quote?.nights} nights · {dates.guests} guests</p><strong>₹{((quote?.total ?? 0) / 100).toLocaleString('en-IN')}</strong><button className="text-link" type="button" onClick={() => setStep('search')}>Change dates</button></div><label className="booking-input">Your name<input value={details.name} onChange={(event) => setDetails({ ...details, name: event.target.value })} required minLength={2} /></label><label className="booking-input">Email address<input type="email" value={details.email} onChange={(event) => setDetails({ ...details, email: event.target.value })} required /></label><label className="booking-input">Phone number<input type="tel" value={details.phone} onChange={(event) => setDetails({ ...details, phone: event.target.value })} required minLength={7} /></label><button className="button button-dark" type="submit" disabled={busy}>{busy ? 'Holding your dates…' : 'Reserve these dates'} <ArrowRight aria-hidden="true" /></button>{message && <p className="booking-note" role="alert">{message}</p>}</form>
+
+  return <form onSubmit={checkAvailability} className="booking-panel"><div className="booking-field"><CalendarDays aria-hidden="true" /><label htmlFor="check-in">Check in<input id="check-in" type="date" value={dates.checkIn} onChange={(event) => setDates({ ...dates, checkIn: event.target.value })} required /></label></div><div className="booking-field"><CalendarDays aria-hidden="true" /><label htmlFor="check-out">Check out<input id="check-out" type="date" value={dates.checkOut} onChange={(event) => setDates({ ...dates, checkOut: event.target.value })} required /></label></div><div className="booking-field"><Users aria-hidden="true" /><label htmlFor="guests">Guests<select id="guests" value={dates.guests} onChange={(event) => setDates({ ...dates, guests: event.target.value })}><option value="2">2 guests</option><option value="4">4 guests</option><option value="6">6 guests</option><option value="8">8 guests</option></select></label></div><button className="button button-dark" type="submit" disabled={busy}>{busy ? 'Checking dates…' : 'Check availability'} <ArrowRight aria-hidden="true" /></button>{message && <p className="booking-note" role="alert">{message}</p>}</form>
 }
 
 export default function Page() {

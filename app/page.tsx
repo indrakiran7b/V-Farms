@@ -1,14 +1,14 @@
 'use client'
 
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { ArrowRight, CalendarDays, Menu, Sprout, Users, X } from 'lucide-react'
 
 const rooms = [
-  ['The Canopy', 'A quiet corner above the plantation, filled with morning light.', '01'],
-  ['The Orchard', 'A generous room opening toward the old mango trees.', '02'],
-  ['The Courtyard', 'An intimate hideaway with a private garden outlook.', '03'],
-  ['The Veranda', 'Slow afternoons and long views across the farm.', '04'],
-  ['The Studio', 'A considered space for unhurried weekends.', '05'],
+  ['The Canopy', 'A quiet corner above the plantation, filled with morning light.', '01', 'bedroom.png'],
+  ['The Orchard', 'A generous room opening toward the old mango trees.', '02', 'main hall.png'],
+  ['The Courtyard', 'An intimate hideaway with a private garden outlook.', '03', 'lawn and open area.png'],
+  ['The Veranda', 'Slow afternoons and long views across the farm.', '04', 'side view 2.png'],
+  ['The Studio', 'A considered space for unhurried weekends.', '05', 'main hall 2.png'],
 ]
 
 const experiences = [
@@ -33,6 +33,20 @@ const propertyGallery = [
   ['IMG_6036.PNG', 'Evening atmosphere', 'Colourful illuminated outdoor feature at the estate.', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/IMG_6036.PNG-OMeP7rkmXZOkXlGl0E2ZNRqqT49l8a.jpeg'],
   ['WhatsApp Image 2026-10-13 at 13.14.48.jpeg', 'Evening atmosphere', 'Colourful illuminated outdoor feature at night.', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202026-10-13%20at%2013.14.48-QmVyOmygpsP7WNSYnptzV5KNbfGB2N.jpeg'],
 ]
+
+function Gallery({ onOpen }: { onOpen: (index: number) => void }) {
+  const sequence = [...propertyGallery, ...propertyGallery]
+  return <div className="gallery-marquee" aria-label="V-Farms property photographs">
+    <div className="gallery-track">{sequence.map(([name, category, alt, src], index) => <button className={`gallery-card gallery-card-${(index % propertyGallery.length) + 1}`} key={`${name}-${index}`} type="button" onClick={() => onOpen(index % propertyGallery.length)} aria-label={`Open ${name.replace(/\.[^.]+$/, '')} photograph`}><img src={src} alt={alt} loading={index < 4 ? 'eager' : 'lazy'} /><span className="gallery-caption"><small>{category}</small><strong>{name.replace(/\.[^.]+$/, '')}</strong></span></button>)}</div>
+  </div>
+}
+
+function Lightbox({ index, onClose, onChange }: { index: number; onClose: () => void; onChange: (next: number) => void }) {
+  const [startX, setStartX] = useState<number | null>(null)
+  const [name, category, alt, src] = propertyGallery[index]
+  useEffect(() => { const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose(); if (event.key === 'ArrowRight') onChange((index + 1) % propertyGallery.length); if (event.key === 'ArrowLeft') onChange((index - 1 + propertyGallery.length) % propertyGallery.length) }; document.addEventListener('keydown', onKey); return () => document.removeEventListener('keydown', onKey) }, [index, onChange, onClose])
+  return <div className="lightbox" role="dialog" aria-modal="true" aria-label="Property photograph viewer" onClick={onClose} onTouchStart={event => setStartX(event.changedTouches[0].clientX)} onTouchEnd={event => { if (startX === null) return; const delta = event.changedTouches[0].clientX - startX; if (Math.abs(delta) > 45) onChange((index + (delta < 0 ? 1 : -1) + propertyGallery.length) % propertyGallery.length); setStartX(null) }}><button className="lightbox-close" type="button" onClick={onClose} aria-label="Close photograph viewer">×</button><button className="lightbox-arrow previous" type="button" onClick={event => { event.stopPropagation(); onChange((index - 1 + propertyGallery.length) % propertyGallery.length) }} aria-label="Previous photograph">‹</button><figure onClick={event => event.stopPropagation()}><img src={src} alt={alt} /><figcaption><small>{category}</small><strong>{name.replace(/\.[^.]+$/, '')}</strong></figcaption></figure><button className="lightbox-arrow next" type="button" onClick={event => { event.stopPropagation(); onChange((index + 1) % propertyGallery.length) }} aria-label="Next photograph">›</button></div>
+}
 
 function BookingSearch() {
   const [mode, setMode] = useState<'stay' | 'event'>('stay')
@@ -114,6 +128,7 @@ function BookingSearch() {
 
 export default function Page() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
   return (
     <main>
       <section className="hero" id="home">
@@ -140,11 +155,11 @@ export default function Page() {
 
       <section className="image-story shell" id="estate"><div className="story-image"><img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/dragon%20fruit%20farm.png-p4xxhD5oR2gHhJ6J0hfMvdMc79CFF7.jpeg" alt="Dragon fruit rows across the V-Farms farmland" /></div><div className="story-copy"><p className="eyebrow">01 / The plantation</p><h2>Rooted in<br /><em>the real.</em></h2><p className="body-copy">There is a particular pleasure in being close to where things grow. Walk between the dragon fruit rows, follow the changing light, and let the day find its own pace.</p><div className="stat-row"><div><strong>05</strong><span>acres of land</span></div><div><strong>01</strong><span>private estate</span></div></div></div></section>
 
-      <section className="rooms-section" id="rooms"><div className="shell section-heading"><div><p className="eyebrow">The accommodation</p><h2>Five rooms.<br /><em>One whole resort.</em></h2></div><p className="body-copy">Each room has its own character. Your booking gives you the entire estate, so every room is included.</p></div><div className="rooms-grid shell">{rooms.map(([name, desc, number], index) => <article className={`room-card room-${index + 1}`} key={name}>{index === 0 && <img src="/vfarms-room.png" alt="The Canopy guest room" />}<div className="room-overlay"><span>{number}</span><div><h3>{name}</h3><p>{desc}</p></div></div></article>)}</div><p className="room-note shell">Five distinct rooms. One exclusive booking. All five rooms are included in a whole-resort stay.</p></section>
+      <section className="rooms-section" id="rooms"><div className="shell section-heading"><div><p className="eyebrow">The accommodation</p><h2>Five rooms.<br /><em>One whole resort.</em></h2></div><p className="body-copy">Each room has its own character. Your booking gives you the entire estate, so every room is included.</p></div><div className="rooms-grid shell">{rooms.map(([name, desc, number, image], index) => { const photo = propertyGallery.find(([file]) => file === image); return <article className={`room-card room-${index + 1}`} key={name}><img src={photo?.[3]} alt={`${name} — V-Farms estate interior and grounds`} /><div className="room-overlay"><span>{number}</span><div><h3>{name}</h3><p>{desc}</p></div></div></article> })}</div><p className="room-note shell">Five distinct rooms. One exclusive booking. All five rooms are included in a whole-resort stay.</p></section>
 
       <section className="experience-section shell"><div className="section-heading"><div><p className="eyebrow">A day at V-Farms</p><h2>Let the day<br /><em>unfold.</em></h2></div></div><div className="experience-grid">{experiences.map(([number, title, copy]) => <article key={number}><span>{number}</span><h3>{title}</h3><p>{copy}</p></article>)}</div></section>
 
-      <section className="gallery-section shell" id="gallery"><div className="section-heading"><div><p className="eyebrow">The V-Farms gallery</p><h2>See the place<br /><em>for yourself.</em></h2></div><p className="body-copy">Real views of the estate, its rooms, open-air spaces, pool, farm, and evenings under the palms.</p></div><div className="gallery-grid">{propertyGallery.map(([name, category, alt, src], index) => <figure className={`gallery-card gallery-card-${index + 1}`} key={name}><img src={src} alt={alt} loading={index < 3 ? 'eager' : 'lazy'} /><figcaption><span>{category}</span><strong>{name.replace(/\.[^.]+$/, '')}</strong></figcaption></figure>)}</div></section>\n\n      <section className="event-banner" id="events"><div className="shell event-inner"><p className="eyebrow light">Gather here</p><h2>For the days<br /><em>worth gathering for.</em></h2><p>From intimate celebrations to thoughtful events, make the estate yours.</p><a href="#contact" className="button button-light">Plan an event <ArrowRight aria-hidden="true" /></a></div></section>
+      <section className="gallery-section" id="gallery"><div className="shell section-heading"><div><p className="eyebrow">The V-Farms gallery</p><h2>See the place<br /><em>for yourself.</em></h2></div><p className="body-copy">Real views of the estate, its rooms, open-air spaces, pool, farm, and evenings under the palms.</p></div><Gallery onOpen={setLightboxIndex} />{lightboxIndex !== null && <Lightbox index={lightboxIndex} onClose={() => setLightboxIndex(null)} onChange={setLightboxIndex} />}</section>\n\n      <section className="event-banner" id="events"><div className="shell event-inner"><p className="eyebrow light">Gather here</p><h2>For the days<br /><em>worth gathering for.</em></h2><p>From intimate celebrations to thoughtful events, make the estate yours.</p><a href="#contact" className="button button-light">Plan an event <ArrowRight aria-hidden="true" /></a></div></section>
 
       <section className="book-section shell" id="book"><div className="book-heading"><p className="eyebrow">Make your way here</p><h2>Find your<br /><em>way to V-Farms.</em></h2><p className="body-copy">Book exclusive access to the estate and all five rooms. We look forward to welcoming you.</p></div><BookingSearch /></section>
 

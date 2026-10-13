@@ -55,10 +55,22 @@ function BookingSearch() {
       const openCheckout = () => {
         const Razorpay = (window as Window & { Razorpay?: new (options: Record<string, unknown>) => { open: () => void } }).Razorpay
         if (!Razorpay) { setMessage('Unable to load secure checkout. Please try again.'); return }
-        const checkout = new Razorpay({ key: data.keyId, amount: data.amount, currency: data.currency, name: 'V-Farms', description: `Estate stay · ${data.bookingReference}`, order_id: data.orderId, prefill: data.prefill, theme: { color: '#17382b' }, handler: async (payment: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
-          const verified = await fetch('/api/payments/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ bookingId: booking.id, ...payment }) })
+        const checkout = new Razorpay({ key: data.keyId, amount: data.amount, currency: data.currency, name: 'V-Farms', description: `Estate stay · ${data.bookingReference}`, order_id: data.orderId, prefill: data.prefill, theme: { color: '#17382b' }, handler: async (payment: { razorpay_order_id?: string; razorpay_payment_id?: string; razorpay_signature?: string }) => {
+          const razorpayOrderId = payment.razorpay_order_id ?? data.orderId
+          const razorpayPaymentId = payment.razorpay_payment_id
+          const razorpaySignature = payment.razorpay_signature
+          console.debug('[v0] Razorpay callback fields present', {
+            orderId: Boolean(razorpayOrderId),
+            paymentId: Boolean(razorpayPaymentId),
+            signature: Boolean(razorpaySignature),
+          })
+          if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
+            setMessage('Payment details were incomplete. Please try again or contact V-Farms.')
+            return
+          }
+          const verified = await fetch('/api/payments/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ bookingId: booking.id, razorpayOrderId, razorpayPaymentId, razorpaySignature }) })
           const result = await verified.json()
-          if (!verified.ok) { setMessage(result.error ?? 'Payment is pending verification.'); return }
+          if (!verified.ok || result.status !== 'confirmed') { setMessage(result.error ?? 'Payment is pending verification.'); return }
           setStep('success')
           }
         })

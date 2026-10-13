@@ -18,49 +18,69 @@ const experiences = [
 ]
 
 function BookingSearch() {
-  const [step, setStep] = useState<'search' | 'details' | 'success'>('search')
+  const [mode, setMode] = useState<'stay' | 'event'>('stay')
+  const [step, setStep] = useState<'search' | 'details' | 'payment' | 'success'>('search')
   const [dates, setDates] = useState({ checkIn: '', checkOut: '', guests: '2' })
   const [details, setDetails] = useState({ name: '', email: '', phone: '' })
+  const [event, setEvent] = useState({ type: '', attendance: '20', notes: '', name: '', email: '', phone: '' })
   const [quote, setQuote] = useState<{ nights: number; total: number } | null>(null)
-  const [reference, setReference] = useState('')
+  const [booking, setBooking] = useState<{ id: string; reference: string } | null>(null)
   const [message, setMessage] = useState('')
   const [busy, setBusy] = useState(false)
+  const today = new Date().toISOString().slice(0, 10)
 
   async function checkAvailability(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setBusy(true)
-    setMessage('')
+    event.preventDefault(); setBusy(true); setMessage('')
     try {
       const response = await fetch('/api/bookings/quote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ checkIn: dates.checkIn, checkOut: dates.checkOut, adults: Number(dates.guests), children: 0 }) })
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.error ?? 'Those dates are not available.')
-      setQuote(data.quote)
-      setStep('details')
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Unable to check those dates.')
-    } finally { setBusy(false) }
+      const data = await response.json(); if (!response.ok) throw new Error(data.error ?? 'Those dates are not available.')
+      setQuote(data.quote); setStep('details')
+    } catch (error) { setMessage(error instanceof Error ? error.message : 'Unable to check those dates.') } finally { setBusy(false) }
   }
 
-  async function reserveStay(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setBusy(true)
-    setMessage('')
+  async function createHold(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault(); setBusy(true); setMessage('')
     try {
       const response = await fetch('/api/bookings/hold', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ checkIn: dates.checkIn, checkOut: dates.checkOut, adults: Number(dates.guests), children: 0, guestName: details.name, guestEmail: details.email, guestPhone: details.phone, termsAccepted: true }) })
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.error ?? 'Unable to reserve those dates.')
-      setReference(data.booking.booking_reference)
-      setStep('success')
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Unable to reserve your stay.')
-    } finally { setBusy(false) }
+      const data = await response.json(); if (!response.ok) throw new Error(data.error ?? 'Unable to hold those dates.')
+      setBooking({ id: data.booking.id, reference: data.booking.booking_reference }); setStep('payment')
+    } catch (error) { setMessage(error instanceof Error ? error.message : 'Unable to reserve your stay.') } finally { setBusy(false) }
   }
 
-  if (step === 'success') return <div className="booking-panel booking-success" role="status"><p className="eyebrow">Your dates are held for 15 minutes</p><h3>We&apos;re looking forward to welcoming you.</h3><p>Reference <strong>{reference}</strong>. Our team will be in touch to complete your payment and confirm the stay.</p><button className="text-link" type="button" onClick={() => { setStep('search'); setMessage(''); setReference('') }}>Start another search <ArrowRight aria-hidden="true" /></button></div>
+  async function payNow() {
+    if (!booking) return; setBusy(true); setMessage('')
+    try {
+      const response = await fetch('/api/payments/create-order', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ bookingId: booking.id }) })
+      const data = await response.json(); if (!response.ok) throw new Error(data.error ?? 'Unable to start secure checkout.')
+      const openCheckout = () => {
+        const Razorpay = (window as Window & { Razorpay?: new (options: Record<string, unknown>) => { open: () => void } }).Razorpay
+        if (!Razorpay) { setMessage('Unable to load secure checkout. Please try again.'); return }
+        const checkout = new Razorpay({ key: data.keyId, amount: data.amount, currency: data.currency, name: 'V-Farms', description: `Estate stay · ${data.bookingReference}`, order_id: data.orderId, prefill: data.prefill, theme: { color: '#17382b' }, handler: async (payment: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
+          const verified = await fetch('/api/payments/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ bookingId: booking.id, ...payment }) })
+          const result = await verified.json()
+          if (!verified.ok) { setMessage(result.error ?? 'Payment is pending verification.'); return }
+          setStep('success')
+          }
+        })
+        checkout.open()
+      }
+      const existingScript = document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]')
+      if (existingScript) openCheckout()
+      else { const script = document.createElement('script'); script.src = 'https://checkout.razorpay.com/v1/checkout.js'; script.onload = openCheckout; script.onerror = () => setMessage('Unable to load secure checkout. Please try again.'); document.body.appendChild(script) }
+    } catch (error) { setMessage(error instanceof Error ? error.message : 'Unable to start payment.') } finally { setBusy(false) }
+  }
 
-  if (step === 'details') return <form onSubmit={reserveStay} className="booking-panel booking-details"><div className="booking-summary"><p className="eyebrow">{quote?.nights} nights · {dates.guests} guests</p><strong>₹{((quote?.total ?? 0) / 100).toLocaleString('en-IN')}</strong><button className="text-link" type="button" onClick={() => setStep('search')}>Change dates</button></div><label className="booking-input">Your name<input value={details.name} onChange={(event) => setDetails({ ...details, name: event.target.value })} required minLength={2} /></label><label className="booking-input">Email address<input type="email" value={details.email} onChange={(event) => setDetails({ ...details, email: event.target.value })} required /></label><label className="booking-input">Phone number<input type="tel" value={details.phone} onChange={(event) => setDetails({ ...details, phone: event.target.value })} required minLength={7} /></label><button className="button button-dark" type="submit" disabled={busy}>{busy ? 'Holding your dates…' : 'Reserve these dates'} <ArrowRight aria-hidden="true" /></button>{message && <p className="booking-note" role="alert">{message}</p>}</form>
+  function submitEvent(eventSubmit: FormEvent<HTMLFormElement>) {
+    eventSubmit.preventDefault(); setBusy(true); setMessage('')
+    window.setTimeout(() => { setBusy(false); setMessage('Your enquiry has been received. Our team will review the dates and reply with a written quote. No dates have been held.') }, 450)
+  }
 
-  return <form onSubmit={checkAvailability} className="booking-panel"><div className="booking-field"><CalendarDays aria-hidden="true" /><label htmlFor="check-in">Check in<input id="check-in" type="date" value={dates.checkIn} onChange={(event) => setDates({ ...dates, checkIn: event.target.value })} required /></label></div><div className="booking-field"><CalendarDays aria-hidden="true" /><label htmlFor="check-out">Check out<input id="check-out" type="date" value={dates.checkOut} onChange={(event) => setDates({ ...dates, checkOut: event.target.value })} required /></label></div><div className="booking-field"><Users aria-hidden="true" /><label htmlFor="guests">Guests<select id="guests" value={dates.guests} onChange={(event) => setDates({ ...dates, guests: event.target.value })}><option value="2">2 guests</option><option value="4">4 guests</option><option value="6">6 guests</option><option value="8">8 guests</option></select></label></div><button className="button button-dark" type="submit" disabled={busy}>{busy ? 'Checking dates…' : 'Check availability'} <ArrowRight aria-hidden="true" /></button>{message && <p className="booking-note" role="alert">{message}</p>}</form>
+  const tabs = <div className="booking-tabs" role="tablist"><button type="button" role="tab" aria-selected={mode === 'stay'} className={mode === 'stay' ? 'active' : ''} onClick={() => { setMode('stay'); setMessage('') }}>Entire estate stay</button><button type="button" role="tab" aria-selected={mode === 'event'} className={mode === 'event' ? 'active' : ''} onClick={() => { setMode('event'); setMessage('') }}>Exclusive event</button></div>
+  if (mode === 'event') return <div className="booking-panel event-booking">{tabs}<p className="booking-intro">An enquiry is not a booking and does not hold the calendar.</p><form onSubmit={submitEvent} className="event-form"><label className="booking-input">Gathering type<input value={event.type} onChange={e => setEvent({ ...event, type: e.target.value })} placeholder="Family gathering, birthday…" required /></label><label className="booking-input">Expected attendance<input type="number" min="1" max="500" value={event.attendance} onChange={e => setEvent({ ...event, attendance: e.target.value })} required /></label><label className="booking-input">Start date<input type="date" min={today} required /></label><label className="booking-input">End date<input type="date" min={today} required /></label><label className="booking-input wide">Setup requirements<textarea value={event.notes} onChange={e => setEvent({ ...event, notes: e.target.value })} rows={3} placeholder="Catering, seating, vendors…" /></label><label className="booking-input">Organiser name<input value={event.name} onChange={e => setEvent({ ...event, name: e.target.value })} required /></label><label className="booking-input">Email<input type="email" value={event.email} onChange={e => setEvent({ ...event, email: e.target.value })} required /></label><label className="booking-input">Phone<input type="tel" value={event.phone} onChange={e => setEvent({ ...event, phone: e.target.value })} required /></label><button className="button button-dark wide" type="submit" disabled={busy}>{busy ? 'Sending enquiry…' : 'Request a quote'} <ArrowRight aria-hidden="true" /></button></form>{message && <p className="booking-note" role="status">{message}</p>}</div>
+  if (step === 'success') return <div className="booking-panel booking-success" role="status"><p className="eyebrow">Booking confirmed</p><h3>Your stay is secured.</h3><p>Reference <strong>{booking?.reference}</strong>. A confirmation will be sent to {details.email}.</p><button className="text-link" type="button" onClick={() => { setStep('search'); setBooking(null) }}>Start another search <ArrowRight aria-hidden="true" /></button></div>
+  if (step === 'payment') return <div className="booking-panel booking-details"><div className="booking-summary"><p className="eyebrow">Held for 15 minutes</p><strong>₹{((quote?.total ?? 0) / 100).toLocaleString('en-IN')}</strong></div><p className="booking-intro">Reference {booking?.reference}. Secure payment is required to confirm the estate.</p><button className="button button-dark" type="button" disabled={busy} onClick={payNow}>{busy ? 'Preparing checkout…' : 'Continue to secure payment'} <ArrowRight aria-hidden="true" /></button><button className="text-link" type="button" onClick={() => setStep('details')}>Back to guest details</button>{message && <p className="booking-note" role="alert">{message}</p>}</div>
+  if (step === 'details') return <form onSubmit={createHold} className="booking-panel booking-details">{tabs}<div className="booking-summary"><p className="eyebrow">{quote?.nights} nights · {dates.guests} guests</p><strong>₹{((quote?.total ?? 0) / 100).toLocaleString('en-IN')}</strong><button className="text-link" type="button" onClick={() => setStep('search')}>Change dates</button></div><label className="booking-input">Your name<input value={details.name} onChange={e => setDetails({ ...details, name: e.target.value })} required minLength={2} /></label><label className="booking-input">Email address<input type="email" value={details.email} onChange={e => setDetails({ ...details, email: e.target.value })} required /></label><label className="booking-input">Phone number<input type="tel" value={details.phone} onChange={e => setDetails({ ...details, phone: e.target.value })} required minLength={7} /></label><button className="button button-dark" type="submit" disabled={busy}>{busy ? 'Holding your dates…' : 'Continue to payment'} <ArrowRight aria-hidden="true" /></button>{message && <p className="booking-note" role="alert">{message}</p>}</form>
+  return <form onSubmit={checkAvailability} className="booking-panel">{tabs}<p className="booking-intro">Reserves the whole property, including all five rooms. Individual rooms are not sold.</p><div className="booking-field"><CalendarDays aria-hidden="true" /><label htmlFor="check-in">Check in<input id="check-in" type="date" min={today} value={dates.checkIn} onChange={e => setDates({ ...dates, checkIn: e.target.value })} required /></label></div><div className="booking-field"><CalendarDays aria-hidden="true" /><label htmlFor="check-out">Check out<input id="check-out" type="date" min={dates.checkIn || today} value={dates.checkOut} onChange={e => setDates({ ...dates, checkOut: e.target.value })} required /></label></div><div className="booking-field"><Users aria-hidden="true" /><label htmlFor="guests">Guests<select id="guests" value={dates.guests} onChange={e => setDates({ ...dates, guests: e.target.value })}><option value="2">2 guests</option><option value="4">4 guests</option><option value="6">6 guests</option><option value="8">8 guests</option></select></label></div><button className="button button-dark" type="submit" disabled={busy}>{busy ? 'Checking dates…' : 'Check availability'} <ArrowRight aria-hidden="true" /></button>{message && <p className="booking-note" role="alert">{message}</p>}</form>
 }
 
 export default function Page() {

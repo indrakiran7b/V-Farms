@@ -17,6 +17,23 @@ const experiences = [
   ['03', 'Make space to be still', 'A private estate designed for conversations, celebrations, and rest.'],
 ]
 
+const propertyGallery = [
+  ['arial View.png', 'Estate and aerial views', 'Aerial view of V-Farms surrounded by green fields.', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/arial%20View.png-EUexrZ544YUcSJbAoSgOjDa5Dgbpxu.jpeg'],
+  ['side view.png', 'Estate and aerial views', 'Aerial view across the private farm estate.', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/side%20view.png-ROEnqtnkYbP24bM5n02tBQKrNcbcSP.jpeg'],
+  ['side view 2.png', 'Estate and aerial views', 'Aerial view of the red-roofed retreat and gardens.', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/side%20view%202.png-3xbIKZVfhTcVlEvGwO33IQsNXTkS3T.jpeg'],
+  ['main hall.png', 'Interiors and accommodation', 'Bright main hall with a long dining table and colourful feature wall.', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/main%20hall.png-7g49Ls4GEbYf00TkS24Q7xlbFumQl0.jpeg'],
+  ['main hall 2.png', 'Interiors and accommodation', 'Detailed view of the main hall interior.', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/main%20hall%202.png-cLiKf3WPrQj36qYicoUhSaedTHZKsQ.jpeg'],
+  ['bedroom.png', 'Interiors and accommodation', 'Guest bedroom with a king bed and warm yellow walls.', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/bedroom-lvUROdHza1ihduUr0ryesyYKXm488P.png'],
+  ['swimming pool.png', 'Pool and amenities', 'Blue-tiled swimming pool with a shallow step area.', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/swimming%20pool.png-6XSqP0CARaC5fjnkDm8OgBtzzeOv3C.jpeg'],
+  ['lawn and open area.png', 'Gardens and outdoor spaces', 'Covered outdoor dining and lounge space beneath palms.', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/lawn%20and%20open%20area.png-nXt3Vfw1AB0LIiAIfUnJ6FBbD8ds1P.jpeg'],
+  ['lawn and open area 2.png', 'Gardens and outdoor spaces', 'Open-air covered patio with garden views.', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/lawn%20and%20open%20area%202.png-33fy2elqrbvvW9yS6fLOPfdvV40w8e.jpeg'],
+  ['fire camp setup.png', 'Evening atmosphere', 'Campfire circle arranged for an evening gathering.', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/fire%20camp%20setup.png-VPrt4tQ97KzMMdoo8T8BOpe50Sxobw.jpeg'],
+  ['night view.png', 'Evening atmosphere', 'The estate glowing after dark, seen from above.', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/night%20view-EAZVyWZn2fMZ0FGGJj6wBblUnjZd2P.png'],
+  ['dragon fruit farm.png', 'Farm and nature', 'Dragon fruit rows stretching across the surrounding farmland.', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/dragon%20fruit%20farm.png-p4xxhD5oR2gHhJ6J0hfMvdMc79CFF7.jpeg'],
+  ['IMG_6036.PNG', 'Evening atmosphere', 'Colourful illuminated outdoor feature at the estate.', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/IMG_6036.PNG-OMeP7rkmXZOkXlGl0E2ZNRqqT49l8a.jpeg'],
+  ['WhatsApp Image 2026-10-13 at 13.14.48.jpeg', 'Evening atmosphere', 'Colourful illuminated outdoor feature at night.', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202026-10-13%20at%2013.14.48-QmVyOmygpsP7WNSYnptzV5KNbfGB2N.jpeg'],
+]
+
 function BookingSearch() {
   const [mode, setMode] = useState<'stay' | 'event'>('stay')
   const [step, setStep] = useState<'search' | 'details' | 'payment' | 'success'>('search')
@@ -100,12 +117,12 @@ export default function Page() {
   return (
     <main>
       <section className="hero" id="home">
-        <img src="/vfarms-hero.png" alt="Dragon fruit plantation and guesthouse at V-Farms" className="hero-image" />
+        <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/arial%20View.png-EUexrZ544YUcSJbAoSgOjDa5Dgbpxu.jpeg" alt="Aerial view of V-Farms surrounded by green fields" className="hero-image" />
         <div className="hero-shade" />
         <nav className="nav shell" aria-label="Main navigation">
           <a href="#home" className="wordmark">V<span>—</span>FARMS</a>
           <div className={`nav-links ${menuOpen ? 'is-open' : ''}`}>
-            <a href="#story" onClick={() => setMenuOpen(false)}>The estate</a><a href="#rooms" onClick={() => setMenuOpen(false)}>Stay</a><a href="#events" onClick={() => setMenuOpen(false)}>Events</a><a href="#contact" onClick={() => setMenuOpen(false)}>Visit</a>
+            <a href="#story" onClick={() => setMenuOpen(false)}>The estate</a><a href="#rooms" onClick={() => setMenuOpen(false)}>Stay</a><a href="#events" onClick={() => setMenuOpen(false)}>Events</a><a href="#gallery" onClick={() => setMenuOpen(false)}>Gallery</a><a href="#contact" onClick={() => setMenuOpen(false)}>Visit</a>
             <a className="nav-book" href="#book" onClick={() => setMenuOpen(false)}>Book your stay <ArrowRight aria-hidden="true" /></a>
           </div>
           <button className="menu-toggle" aria-label={menuOpen ? 'Close menu' : 'Open menu'} onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? <X /> : <Menu />}</button>
@@ -121,13 +138,13 @@ export default function Page() {
 
       <section className="intro shell" id="story"><div className="intro-mark"><Sprout aria-hidden="true" /></div><div><p className="eyebrow">The V-Farms feeling</p><h2>Come for the quiet.<br /><em>Stay for the feeling.</em></h2><p className="body-copy">V-Farms is a private five-acre estate shaped by the land around it. A considered place to slow down, share a meal, celebrate something meaningful, or simply wake up somewhere green.</p><a href="#estate" className="text-link">Discover the estate <ArrowRight aria-hidden="true" /></a></div></section>
 
-      <section className="image-story shell" id="estate"><div className="story-image"><img src="/vfarms-garden.png" alt="Dragon fruit growing at the plantation" /></div><div className="story-copy"><p className="eyebrow">01 / The plantation</p><h2>Rooted in<br /><em>the real.</em></h2><p className="body-copy">There is a particular pleasure in being close to where things grow. Walk between the dragon fruit rows, follow the changing light, and let the day find its own pace.</p><div className="stat-row"><div><strong>05</strong><span>acres of land</span></div><div><strong>01</strong><span>private estate</span></div></div></div></section>
+      <section className="image-story shell" id="estate"><div className="story-image"><img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/dragon%20fruit%20farm.png-p4xxhD5oR2gHhJ6J0hfMvdMc79CFF7.jpeg" alt="Dragon fruit rows across the V-Farms farmland" /></div><div className="story-copy"><p className="eyebrow">01 / The plantation</p><h2>Rooted in<br /><em>the real.</em></h2><p className="body-copy">There is a particular pleasure in being close to where things grow. Walk between the dragon fruit rows, follow the changing light, and let the day find its own pace.</p><div className="stat-row"><div><strong>05</strong><span>acres of land</span></div><div><strong>01</strong><span>private estate</span></div></div></div></section>
 
       <section className="rooms-section" id="rooms"><div className="shell section-heading"><div><p className="eyebrow">The accommodation</p><h2>Five rooms.<br /><em>One whole resort.</em></h2></div><p className="body-copy">Each room has its own character. Your booking gives you the entire estate, so every room is included.</p></div><div className="rooms-grid shell">{rooms.map(([name, desc, number], index) => <article className={`room-card room-${index + 1}`} key={name}>{index === 0 && <img src="/vfarms-room.png" alt="The Canopy guest room" />}<div className="room-overlay"><span>{number}</span><div><h3>{name}</h3><p>{desc}</p></div></div></article>)}</div><p className="room-note shell">Five distinct rooms. One exclusive booking. All five rooms are included in a whole-resort stay.</p></section>
 
       <section className="experience-section shell"><div className="section-heading"><div><p className="eyebrow">A day at V-Farms</p><h2>Let the day<br /><em>unfold.</em></h2></div></div><div className="experience-grid">{experiences.map(([number, title, copy]) => <article key={number}><span>{number}</span><h3>{title}</h3><p>{copy}</p></article>)}</div></section>
 
-      <section className="event-banner" id="events"><div className="shell event-inner"><p className="eyebrow light">Gather here</p><h2>For the days<br /><em>worth gathering for.</em></h2><p>From intimate celebrations to thoughtful events, make the estate yours.</p><a href="#contact" className="button button-light">Plan an event <ArrowRight aria-hidden="true" /></a></div></section>
+      <section className="gallery-section shell" id="gallery"><div className="section-heading"><div><p className="eyebrow">The V-Farms gallery</p><h2>See the place<br /><em>for yourself.</em></h2></div><p className="body-copy">Real views of the estate, its rooms, open-air spaces, pool, farm, and evenings under the palms.</p></div><div className="gallery-grid">{propertyGallery.map(([name, category, alt, src], index) => <figure className={`gallery-card gallery-card-${index + 1}`} key={name}><img src={src} alt={alt} loading={index < 3 ? 'eager' : 'lazy'} /><figcaption><span>{category}</span><strong>{name.replace(/\.[^.]+$/, '')}</strong></figcaption></figure>)}</div></section>\n\n      <section className="event-banner" id="events"><div className="shell event-inner"><p className="eyebrow light">Gather here</p><h2>For the days<br /><em>worth gathering for.</em></h2><p>From intimate celebrations to thoughtful events, make the estate yours.</p><a href="#contact" className="button button-light">Plan an event <ArrowRight aria-hidden="true" /></a></div></section>
 
       <section className="book-section shell" id="book"><div className="book-heading"><p className="eyebrow">Make your way here</p><h2>Find your<br /><em>way to V-Farms.</em></h2><p className="body-copy">Book exclusive access to the estate and all five rooms. We look forward to welcoming you.</p></div><BookingSearch /></section>
 

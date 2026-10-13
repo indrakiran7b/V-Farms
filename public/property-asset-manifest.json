@@ -1,0 +1,20 @@
+{
+  "note": "Uploaded source URLs are used directly because the attachment workflow did not expose local writable blobs. preview.mp4 was not present in the project asset inventory and is not referenced.",
+  "assets": [
+    {"original":"arial View.png","category":"estate-aerial","used":"homepage hero; gallery","source":"https://hebbkx1anhila5yf.public.blob.vercel-storage.com/arial%20View.png-EUexrZ544YUcSJbAoSgOjDa5Dgbpxu.jpeg"},
+    {"original":"side view.png","category":"estate-aerial","used":"gallery","source":"https://hebbkx1anhila5yf.public.blob.vercel-storage.com/side%20view.png-ROEnqtnkYbP24bM5n02tBQKrNcbcSP.jpeg"},
+    {"original":"side view 2.png","category":"estate-aerial","used":"gallery","source":"https://hebbkx1anhila5yf.public.blob.vercel-storage.com/side%20view%202.png-3xbIKZVfhTcVlEvGwO33IQsNXTkS3T.jpeg"},
+    {"original":"main hall.png","category":"interiors","used":"gallery","source":"https://hebbkx1anhila5yf.public.blob.vercel-storage.com/main%20hall.png-7g49Ls4GEbYf00TkS24Q7xlbFumQl0.jpeg"},
+    {"original":"main hall 2.png","category":"interiors","used":"gallery","source":"https://hebbkx1anhila5yf.public.blob.vercel-storage.com/main%20hall%202.png-cLiKf3WPrQj36qYicoUhSaedTHZKsQ.jpeg"},
+    {"original":"bedroom.png","category":"accommodation","used":"gallery","source":"https://hebbkx1anhila5yf.public.blob.vercel-storage.com/bedroom-lvUROdHza1ihduUr0ryesyYKXm488P.png"},
+    {"original":"swimming pool.png","category":"amenities","used":"gallery","source":"https://hebbkx1anhila5yf.public.blob.vercel-storage.com/swimming%20pool.png-6XSqP0CARaC5fjnkDm8OgBtzzeOv3C.jpeg"},
+    {"original":"lawn and open area.png","category":"outdoors","used":"gallery","source":"https://hebbkx1anhila5yf.public.blob.vercel-storage.com/lawn%20and%20open%20area.png-nXt3Vfw1AB0LIiAIfUnJ6FBbD8ds1P.jpeg"},
+    {"original":"lawn and open area 2.png","category":"outdoors","used":"gallery","source":"https://hebbkx1anhila5yf.public.blob.vercel-storage.com/lawn%20and%20open%20area%202.png-33fy2elqrbvvW9yS6fLOPfdvV40w8e.jpeg"},
+    {"original":"fire camp setup.png","category":"experiences","used":"gallery","source":"https://hebbkx1anhila5yf.public.blob.vercel-storage.com/fire%20camp%20setup.png-VPrt4tQ97KzMMdoo8T8BOpe50Sxobw.jpeg"},
+    {"original":"night view.png","category":"evening","used":"gallery","source":"https://hebbkx1anhila5yf.public.blob.vercel-storage.com/night%20view-EAZVyWZn2fMZ0FGGJj6wBblUnjZd2P.png"},
+    {"original":"dragon fruit farm.png","category":"farm-nature","used":"homepage story; gallery","source":"https://hebbkx1anhila5yf.public.blob.vercel-storage.com/dragon%20fruit%20farm.png-p4xxhD5oR2gHhJ6J0hfMvdMc79CFF7.jpeg"},
+    {"original":"IMG_6036.PNG","category":"evening","used":"gallery","source":"https://hebbkx1anhila5yf.public.blob.vercel-storage.com/IMG_6036.PNG-OMeP7rkmXZOkXlGl0E2ZNRqqT49l8a.jpeg"},
+    {"original":"WhatsApp Image 2026-10-13 at 13.14.48.jpeg","category":"evening","used":"gallery; visually equivalent to IMG_6036.PNG","source":"https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202026-10-13%20at%2013.14.48-QmVyOmygpsP7WNSYnptzV5KNbfGB2N.jpeg"},
+    {"original":"preview.mp4","category":"video","used":"not imported: no project file or accessible attachment blob was available"}
+  ]
+}

@@ -1,0 +1,21 @@
+import { NextResponse } from 'next/server'
+import { bookingInputSchema, adminSupabase, bookingReference, activeHoldConflict, quoteStay, PROPERTY_ID } from '@/lib/booking'
+
+export async function POST(request: Request) {
+  try {
+    const input = bookingInputSchema.parse(await request.json())
+    const guests = input.adults + input.children
+    const conflict = await activeHoldConflict(input.checkIn, input.checkOut)
+    if (conflict) return NextResponse.json({ error: 'Those dates are no longer available', conflict }, { status: 409 })
+    const quote = quoteStay(input.checkIn, input.checkOut, guests)
+    const supabase = adminSupabase()
+    const { data: booking, error } = await supabase.from('stay_bookings').insert({ booking_reference: bookingReference(), property_id: PROPERTY_ID, guest_name: input.guestName, guest_email: input.guestEmail, guest_phone: input.guestPhone, check_in: input.checkIn, check_out: input.checkOut, guest_count: guests, booking_status: 'held', payment_status: 'unpaid', subtotal_paise: quote.subtotal, tax_paise: quote.tax, fees_paise: quote.fees, total_paise: quote.total, amount_due_now_paise: quote.amountDueNow, balance_due_paise: quote.balanceDue, price_snapshot: quote }).select('id,booking_reference,check_in,check_out,guest_count,total_paise,amount_due_now_paise,price_snapshot').single()
+    if (error || !booking) throw error ?? new Error('Unable to create booking')
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString()
+    const { data: hold, error: holdError } = await supabase.from('inventory_holds').insert({ property_id: PROPERTY_ID, booking_id: booking.id, check_in: input.checkIn, check_out: input.checkOut, expires_at: expiresAt, status: 'active' }).select('id,expires_at').single()
+    if (holdError) throw holdError
+    return NextResponse.json({ booking, hold })
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Unable to hold dates' }, { status: 400 })
+  }
+}

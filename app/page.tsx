@@ -4,11 +4,11 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { ArrowRight, CalendarDays, Menu, Sprout, Users, X } from 'lucide-react'
 
 const rooms = [
-  ['The Canopy', 'A quiet corner above the plantation, filled with morning light.', '01', 'bedroom.png'],
-  ['The Orchard', 'A generous room opening toward the old mango trees.', '02', 'main hall.png'],
-  ['The Courtyard', 'An intimate hideaway with a private garden outlook.', '03', 'lawn and open area.png'],
-  ['The Veranda', 'Slow afternoons and long views across the farm.', '04', 'side view 2.png'],
-  ['The Studio', 'A considered space for unhurried weekends.', '05', 'main hall 2.png'],
+  ['The Canopy', 'A comfortable bedroom for a restful stay.', '01', 'bedroom.png'],
+  ['The Orchard', 'Explore the dragon fruit farm and surrounding greenery.', '02', 'dragon fruit farm.png'],
+  ['The Courtyard', 'Open-air spaces surrounded by greenery.', '03', 'lawn and open area 2.png'],
+  ['The Veranda', 'A covered outdoor space to relax and gather.', '04', 'lawn and open area.png'],
+  ['The Studio', 'An indoor space for shared moments.', '05', 'main hall.png'],
 ]
 
 const experiences = [

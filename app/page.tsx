@@ -146,6 +146,7 @@ export default function Page() {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
   return (
     <main>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ '@context': 'https://schema.org', '@type': 'LodgingBusiness', '@id': 'https://v-farms-website-development.vercel.app/#business', name: 'V-Farms', url: 'https://v-farms-website-development.vercel.app', telephone: '+919908627778', description: 'Private farm stay and gathering venue near Medchal, Telangana.', areaServed: ['Medchal', 'Hyderabad', 'Telangana'], address: { '@type': 'PostalAddress', addressLocality: 'Medchal', addressRegion: 'Telangana', addressCountry: 'IN' }, sameAs: [] }) }} />
       <section className="hero" id="home">
         <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/arial%20View.png-EUexrZ544YUcSJbAoSgOjDa5Dgbpxu.jpeg" alt="Aerial view of V-Farms surrounded by green fields" className="hero-image" />
         <div className="hero-shade" />
@@ -158,7 +159,7 @@ export default function Page() {
           <button className="menu-toggle" aria-label={menuOpen ? 'Close menu' : 'Open menu'} onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? <X /> : <Menu />}</button>
         </nav>
         <div className="hero-content shell">
-          <p className="eyebrow light">A private farm retreat · Hyderabad, Telangana</p>
+          <p className="eyebrow light">A private farm retreat · Medchal, Telangana</p>
           <h1>A singular<br /><em>escape</em> to nature.</h1>
           <p className="hero-copy">Five acres of dragon fruit, open skies, and a place to gather well.</p>
           <div className="hero-actions"><a href="#book" className="button button-light">Book entire resort <ArrowRight aria-hidden="true" /></a><a href="#events" className="text-link light">Plan an event <ArrowRight aria-hidden="true" /></a></div>
@@ -174,11 +175,11 @@ export default function Page() {
 
       <section className="experience-section shell"><div className="section-heading"><div><p className="eyebrow">A day at V-Farms</p><h2>Let the day<br /><em>unfold.</em></h2></div></div><div className="experience-grid">{experiences.map(([number, title, copy]) => <article key={number}><span>{number}</span><h3>{title}</h3><p>{copy}</p></article>)}</div></section>
 
-      <section className="gallery-section" id="gallery"><div className="shell section-heading"><div><p className="eyebrow">The V-Farms gallery</p><h2>See the place<br /><em>for yourself.</em></h2></div><p className="body-copy">Real views of the estate, its rooms, open-air spaces, pool, farm, and evenings under the palms.</p></div><Gallery onOpen={setLightboxIndex} />{lightboxIndex !== null && <Lightbox index={lightboxIndex} onClose={() => setLightboxIndex(null)} onChange={setLightboxIndex} />}</section>\n\n      <section className="event-banner" id="events"><div className="shell event-inner"><p className="eyebrow light">Gather here</p><h2>For the days<br /><em>worth gathering for.</em></h2><p>From intimate celebrations to thoughtful events, make the estate yours.</p><a href="#contact" className="button button-light">Plan an event <ArrowRight aria-hidden="true" /></a></div></section>
+      <section className="gallery-section" id="gallery"><div className="shell section-heading"><div><p className="eyebrow">The V-Farms gallery</p><h2>See the place<br /><em>for yourself.</em></h2></div><p className="body-copy">Real views of the estate, its rooms, open-air spaces, pool, farm, and evenings under the palms.</p></div><Gallery onOpen={setLightboxIndex} />{lightboxIndex !== null && <Lightbox index={lightboxIndex} onClose={() => setLightboxIndex(null)} onChange={setLightboxIndex} />}</section>\n\n      <section className="event-banner" id="events"><div className="shell event-inner"><p className="eyebrow light">Private event venue near Medchal</p><h2>For the days<br /><em>worth gathering for.</em></h2><p>From intimate celebrations to thoughtful events, make the estate yours.</p><a href="#contact" className="button button-light">Plan an event <ArrowRight aria-hidden="true" /></a></div></section>
 
       <section className="book-section shell" id="book"><div className="book-heading"><p className="eyebrow">Make your way here</p><h2>Find your<br /><em>way to V-Farms.</em></h2><p className="body-copy">Book exclusive access to the estate and all five rooms. We look forward to welcoming you.</p></div><BookingSearch /></section>
 
-      <footer id="contact"><div className="shell footer-top"><div><a href="#home" className="wordmark">V<span>—</span>FARMS</a><p>A singular escape to nature.</p></div><div className="footer-links"><div><p className="eyebrow">Explore</p><a href="#story">The estate</a><a href="#rooms">The rooms</a><a href="#events">Private events</a></div><div><p className="eyebrow">Find us</p><p>Near Hyderabad,<br />Telangana, India</p><a href="mailto:hello@vfarms.in">hello@vfarms.in</a></div></div></div><div className="shell footer-bottom"><span>© 2025 V-Farms</span><span>Private by nature.</span><a href="#home" aria-label="V-Farms on Instagram">IG</a></div></footer>
+      <footer id="contact"><div className="shell footer-top"><div><a href="#home" className="wordmark">V<span>—</span>FARMS</a><p>A singular escape to nature.</p></div><div className="footer-links"><div><p className="eyebrow">Explore</p><a href="#story">The estate</a><a href="#rooms">The rooms</a><a href="#events">Private events</a></div><div><p className="eyebrow">Find us</p><p>Near Medchal and Hyderabad,<br />Telangana, India</p><a href="tel:+919908627778">+91 99086 27778</a><a href="mailto:hello@vfarms.in">hello@vfarms.in</a></div></div></div><div className="shell footer-bottom"><span>© 2025 V-Farms</span><span>Private by nature.</span><a href="#home" aria-label="V-Farms on Instagram">IG</a></div></footer>
     </main>
   )
 }

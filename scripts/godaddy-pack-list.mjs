@@ -136,8 +136,12 @@ export function assertAiroConfigForGoDaddy() {
   if (build !== 'npm run build') {
     errors.push(`.airo/config.json buildCommand must be "npm run build" (got: ${JSON.stringify(airo.buildCommand)})`)
   }
-  if (serve !== 'npm start') {
-    errors.push(`.airo/config.json serveCommand must be "npm start" (got: ${JSON.stringify(airo.serveCommand)})`)
+  const serveOk =
+    serve === 'npm start' || serve === 'node node_modules/next/dist/bin/next start'
+  if (!serveOk) {
+    errors.push(
+      `.airo/config.json serveCommand must be "npm start" or "node node_modules/next/dist/bin/next start" (got: ${JSON.stringify(airo.serveCommand)})`,
+    )
   }
   if (/\bpnpm\b/.test(build) || /\bpnpm\b/.test(serve)) {
     errors.push('.airo/config.json must not reference pnpm (production EACCES on pnpm-native)')

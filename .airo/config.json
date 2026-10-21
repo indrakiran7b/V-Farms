@@ -1,5 +1,6 @@
 {
   "buildCommand": "npm run build",
-  "serveCommand": "npm start",
+  "serveCommand": "node node_modules/next/dist/bin/next start",
+  "installCommand": "npm ci --omit=dev --ignore-scripts",
   "packageManager": "npm"
 }

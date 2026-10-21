@@ -34,24 +34,6 @@ export const metadata: Metadata = {
     images: [`${siteUrl}/images/v-farms-logo-white.png`],
   },
   generator: 'V-Farms',
-  icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/images/v-farms-logo-white.png',
-        type: 'image/png',
-        sizes: '1200x1200',
-      },
-    ],
-    apple: '/images/v-farms-logo-white.png',
-  },
 }
 
 export const viewport: Viewport = {

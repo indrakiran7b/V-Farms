@@ -151,7 +151,7 @@ export default function Page() {
         <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/arial%20View.png-EUexrZ544YUcSJbAoSgOjDa5Dgbpxu.jpeg" alt="Aerial view of V-Farms surrounded by green fields" className="hero-image" />
         <div className="hero-shade" />
         <nav className="nav shell" aria-label="Main navigation">
-          <a href="#home" className="wordmark">V<span>—</span>FARMS</a>
+          <a href="#home" className="brand-logo-link" aria-label="V-Farms — A Singular Escape, Hyderabad"><img className="brand-logo" src="/images/v-farms-logo.png" alt="V-Farms — A Singular Escape, Hyderabad" /></a>
           <div className={`nav-links ${menuOpen ? 'is-open' : ''}`}>
             <a href="#story" onClick={() => setMenuOpen(false)}>The estate</a><a href="#rooms" onClick={() => setMenuOpen(false)}>Stay</a><a href="#events" onClick={() => setMenuOpen(false)}>Events</a><a href="#gallery" onClick={() => setMenuOpen(false)}>Gallery</a><a href="#contact" onClick={() => setMenuOpen(false)}>Visit</a>
             <a className="nav-book" href="#book" onClick={() => setMenuOpen(false)}>Book your stay <ArrowRight aria-hidden="true" /></a>
@@ -179,7 +179,7 @@ export default function Page() {
 
       <section className="book-section shell" id="book"><div className="book-heading"><p className="eyebrow">Make your way here</p><h2>Find your<br /><em>way to V-Farms.</em></h2><p className="body-copy">Book exclusive access to the estate and all five rooms. We look forward to welcoming you.</p></div><BookingSearch /></section>
 
-      <footer id="contact"><div className="shell footer-top"><div><a href="#home" className="wordmark">V<span>—</span>FARMS</a><p>A singular escape to nature.</p></div><div className="footer-links"><div><p className="eyebrow">Explore</p><a href="#story">The estate</a><a href="#rooms">The rooms</a><a href="#events">Private events</a></div><div><p className="eyebrow">Find us</p><p>Near Medchal and Hyderabad,<br />Telangana, India</p><a href="tel:+919908627778">+91 99086 27778</a><a href="mailto:hello@vfarms.in">hello@vfarms.in</a></div></div></div><div className="shell footer-bottom"><span>© 2025 V-Farms</span><span>Private by nature.</span><a href="#home" aria-label="V-Farms on Instagram">IG</a></div></footer>
+      <footer id="contact"><div className="shell footer-top"><div><a href="#home" className="brand-logo-link" aria-label="V-Farms — A Singular Escape, Hyderabad"><img className="brand-logo" src="/images/v-farms-logo.png" alt="V-Farms — A Singular Escape, Hyderabad" /></a><p>A singular escape to nature.</p></div><div className="footer-links"><div><p className="eyebrow">Explore</p><a href="#story">The estate</a><a href="#rooms">The rooms</a><a href="#events">Private events</a></div><div><p className="eyebrow">Find us</p><p>Near Medchal and Hyderabad,<br />Telangana, India</p><a href="tel:+919908627778">+91 99086 27778</a><a href="mailto:hello@vfarms.in">hello@vfarms.in</a></div></div></div><div className="shell footer-bottom"><span>© 2025 V-Farms</span><span>Private by nature.</span><a href="#home" aria-label="V-Farms on Instagram">IG</a></div></footer>
     </main>
   )
 }

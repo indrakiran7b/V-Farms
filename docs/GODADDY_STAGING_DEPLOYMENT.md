@@ -12,14 +12,14 @@
 |-------|---------|--------|
 | Typecheck | `pnpm run typecheck` / `npm run typecheck` | **PASS** |
 | Tests | `pnpm run test` / `npm run test` | **PASS** (119/119) |
-| Production build | `pnpm run build` / `npm run build` | **PASS** (`next build` 16.4.0) |
+| Production build | `pnpm run build` / `npm run build` | **PASS** (`next build --webpack` 16.4.0) |
 | npm lockfile | `npm ci` (clean `node_modules`) then build | **PASS** (388 packages) |
 | Local Node | `node -v` | **v24.13.1** (dev machine; hosting uses **Node 22** per GoDaddy) |
 
 **Stack (from `package.json`):**
 
 - **Next.js** `16.4.0`, **React** 19, App Router
-- **Scripts:** `"build": "next build"`, `"start": "next start"` (no custom server)
+- **Scripts:** `"build": "next build --webpack"`, `"start": "next start"` (no custom server; **Webpack** avoids Turbopack CSS/port-binding failures on restricted PaaS builders)
 - **Package manager (local):** `pnpm@12.3.4` + `pnpm-lock.yaml` (retained)
 - **GoDaddy install:** **`package-lock.json`** + root `.npmrc` (npm registry; platform docs emphasize **npm**). Upload zip **excludes** `pnpm-lock.yaml` (kept in repo for local pnpm only).
 - **Node:** `"engines": { "node": "22.x" }` (GoDaddy runtime is Node **22**; `engines` does not override host)
@@ -87,6 +87,10 @@ The public [deploy contract](https://github.com/godaddy/nodejs-hosting-agent-ski
 | **HTTPS / CDN / WAF** | Automatic on publish — confirm subdomain SSL after DNS |
 | **Preview vs publish URL** | Preview is account-private; staging subdomain = **publish** + DNS |
 | **Outbound HTTPS** | Required to Supabase, Razorpay, optional Resend — confirm no egress block |
+
+**Turbopack on PaaS:** Next.js 16 defaults to Turbopack for `next build`, which can fail on restricted hosts (e.g. `globals.css` / OS error 13 when spawning a helper that binds a port). This repo uses **`next build --webpack`** (supported in Next 16.4.0 per `next build --help`).
+
+**Middleware deprecation:** Next 16 may warn that `middleware.ts` is deprecated in favor of `proxy`. **No codemod applied** — keep existing Supabase session + rate-limit middleware until a manual migration is validated.
 
 **Official references (external):**
 

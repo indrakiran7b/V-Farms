@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.tests.json",
     "test": "node --import ./tests/register.mjs --test --experimental-strip-types tests/booking.test.ts tests/payments.test.ts tests/quote.test.ts tests/security.test.ts tests/schema-migration.test.ts tests/availability.test.ts tests/create-order-eligibility.test.ts tests/booking-hold-race.test.ts tests/payment-flow.test.ts tests/api-security-audit.test.ts tests/hardening.test.ts tests/integration/http-routes.test.ts",

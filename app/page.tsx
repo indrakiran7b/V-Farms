@@ -151,7 +151,7 @@ export default function Page() {
         <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/arial%20View.png-EUexrZ544YUcSJbAoSgOjDa5Dgbpxu.jpeg" alt="Aerial view of V-Farms surrounded by green fields" className="hero-image" />
         <div className="hero-shade" />
         <nav className="nav shell" aria-label="Main navigation">
-          <a href="#home" className="brand-logo-link" aria-label="V-Farms — A Singular Escape, Hyderabad"><img className="brand-logo" src="/images/v-farms-logo-transparent.png" alt="V-Farms — A Singular Escape, Hyderabad" /></a>
+          <a href="#home" className="brand-logo-link" aria-label="V-Farms — A Singular Escape, Hyderabad"><img className="brand-logo" src="/images/v-farms-logo-white.png" alt="V-Farms — A Singular Escape, Hyderabad" /></a>
           <div className={`nav-links ${menuOpen ? 'is-open' : ''}`}>
             <a href="#story" onClick={() => setMenuOpen(false)}>The estate</a><a href="#rooms" onClick={() => setMenuOpen(false)}>Stay</a><a href="#events" onClick={() => setMenuOpen(false)}>Events</a><a href="#gallery" onClick={() => setMenuOpen(false)}>Gallery</a><a href="#contact" onClick={() => setMenuOpen(false)}>Visit</a>
             <a className="nav-book" href="#book" onClick={() => setMenuOpen(false)}>Book your stay <ArrowRight aria-hidden="true" /></a>

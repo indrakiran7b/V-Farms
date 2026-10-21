@@ -1,6 +1,8 @@
 import { adminSupabase } from '@/lib/booking'
+import { requireAdminPageSession } from '@/lib/auth/guard-server'
 
 export default async function Page() {
+  await requireAdminPageSession()
   const { data, error } = await adminSupabase().from('content_entries').select('id, slug, title, body, status, updated_at, published_at').order('updated_at', { ascending: false })
   return <main className="admin-content"><div className="admin-heading"><div><p className="admin-kicker">Content management</p><h1>Content</h1><p className="admin-muted">Manage versioned content entries without changing the public site until explicitly published.</p></div></div>{error ? <div className="admin-alert">Unable to load content entries.</div> : <section className="admin-panel"><div className="admin-table-wrap"><table><thead><tr>{['slug','title','status','updated_at','published_at'].map(column => <th key={column}>{column.replaceAll('_', ' ')}</th>)}</tr></thead><tbody>{data?.map(item => <tr key={item.id}><td>{item.slug}</td><td>{item.title}</td><td><span className={`admin-status ${item.status}`}>{item.status}</span></td><td>{new Date(item.updated_at).toLocaleDateString('en-IN')}</td><td>{item.published_at ? new Date(item.published_at).toLocaleDateString('en-IN') : '—'}</td></tr>)}</tbody></table></div>{!data?.length && <div className="admin-empty">No content entries have been added.</div>}</section>}</main>
 }

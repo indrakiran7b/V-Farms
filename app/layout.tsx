@@ -1,9 +1,10 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
+import { getSiteUrl } from '@/lib/site-url'
 import './globals.css'
 import './admin/admin.css'
 
-const siteUrl = 'https://v-farms-website-development.vercel.app'
+const siteUrl = getSiteUrl()
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

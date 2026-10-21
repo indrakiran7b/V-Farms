@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "module": "esnext",
+    "target": "ES2022"
+  },
+  "include": ["tests/**/*.ts", "lib/**/*.ts", "app/api/**/*.ts"],
+  "exclude": ["node_modules"]
+}

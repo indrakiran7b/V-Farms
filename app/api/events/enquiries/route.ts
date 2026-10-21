@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
-import { createClient } from '@/lib/supabase/server'
+import { requireAdminApi } from '@/lib/auth/admin-api'
 import { adminSupabase } from '@/lib/booking'
 
 const enquirySchema = z.object({
@@ -17,18 +17,10 @@ const updateSchema = z.object({
   internalNotes: z.string().trim().max(5000).optional(),
 })
 
-async function requireAdmin() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  const role = String(user?.app_metadata?.admin_role ?? user?.app_metadata?.role ?? '')
-  if (!user || !['owner', 'manager', 'staff'].includes(role)) return null
-  return { user, db: adminSupabase() }
-}
-
 export async function GET() {
-  const admin = await requireAdmin()
-  if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const { data, error } = await admin.db.from('event_enquiries').select('id,reference,event_date,guest_count,contact_name,contact_email,contact_phone,requirements,status,internal_notes,created_at,updated_at,event_quotes(id,version,subtotal_inr,deposit_inr,currency,status,terms,created_at,accepted_at),event_audit_logs(id,action,details,created_at)').order('created_at', { ascending: false }).limit(100)
+  const admin = await requireAdminApi()
+  if (!admin.ok) return NextResponse.json({ error: admin.error }, { status: admin.status })
+  const { data, error } = await admin.ctx.db.from('event_enquiries').select('id,reference,event_date,guest_count,contact_name,contact_email,contact_phone,requirements,status,internal_notes,created_at,updated_at,event_quotes(id,version,subtotal_inr,deposit_inr,currency,status,terms,created_at,accepted_at),event_audit_logs(id,action,details,created_at)').order('created_at', { ascending: false }).limit(100)
   if (error) return NextResponse.json({ error: 'Unable to load event enquiries' }, { status: 500 })
   return NextResponse.json({ enquiries: data ?? [] })
 }
@@ -46,29 +38,29 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  const admin = await requireAdmin()
-  if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const admin = await requireAdminApi()
+  if (!admin.ok) return NextResponse.json({ error: admin.error }, { status: admin.status })
   try {
     const input = updateSchema.parse(await request.json())
     const changes = { ...(input.status ? { status: input.status } : {}), ...(input.internalNotes !== undefined ? { internal_notes: input.internalNotes } : {}) }
-    const { data, error } = await admin.db.from('event_enquiries').update(changes).eq('id', input.id).select('id,reference,status,internal_notes,updated_at').single()
+    const { data, error } = await admin.ctx.db.from('event_enquiries').update(changes).eq('id', input.id).select('id,reference,status,internal_notes,updated_at').single()
     if (error) return NextResponse.json({ error: 'Unable to update event enquiry' }, { status: 500 })
-    await admin.db.from('event_audit_logs').insert({ enquiry_id: input.id, action: 'enquiry_updated', details: { changes, actor: admin.user.id } })
+    await admin.ctx.db.from('event_audit_logs').insert({ enquiry_id: input.id, action: 'enquiry_updated', details: { changes, actor: admin.ctx.user.id } })
     return NextResponse.json({ enquiry: data })
   } catch { return NextResponse.json({ error: 'Invalid event update' }, { status: 400 }) }
 }
 
 export async function PUT(request: Request) {
-  const admin = await requireAdmin()
-  if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const admin = await requireAdminApi()
+  if (!admin.ok) return NextResponse.json({ error: admin.error }, { status: admin.status })
   try {
     const input = z.object({ enquiryId: z.string().uuid(), subtotalInr: z.number().min(0), depositInr: z.number().min(0), terms: z.string().trim().max(5000).default('') }).parse(await request.json())
-    const { data: latest } = await admin.db.from('event_quotes').select('version').eq('enquiry_id', input.enquiryId).order('version', { ascending: false }).limit(1).maybeSingle()
+    const { data: latest } = await admin.ctx.db.from('event_quotes').select('version').eq('enquiry_id', input.enquiryId).order('version', { ascending: false }).limit(1).maybeSingle()
     const version = (latest?.version ?? 0) + 1
-    const { data, error } = await admin.db.from('event_quotes').insert({ enquiry_id: input.enquiryId, version, subtotal_inr: input.subtotalInr, deposit_inr: input.depositInr, terms: input.terms }).select('*').single()
+    const { data, error } = await admin.ctx.db.from('event_quotes').insert({ enquiry_id: input.enquiryId, version, subtotal_inr: input.subtotalInr, deposit_inr: input.depositInr, terms: input.terms }).select('*').single()
     if (error) return NextResponse.json({ error: 'Unable to create quote' }, { status: 500 })
-    await admin.db.from('event_enquiries').update({ status: 'quoted' }).eq('id', input.enquiryId)
-    await admin.db.from('event_audit_logs').insert({ enquiry_id: input.enquiryId, action: 'quote_created', details: { version, actor: admin.user.id } })
+    await admin.ctx.db.from('event_enquiries').update({ status: 'quoted' }).eq('id', input.enquiryId)
+    await admin.ctx.db.from('event_audit_logs').insert({ enquiry_id: input.enquiryId, action: 'quote_created', details: { version, actor: admin.ctx.user.id } })
     return NextResponse.json({ quote: data }, { status: 201 })
   } catch { return NextResponse.json({ error: 'Invalid quote' }, { status: 400 }) }
 }

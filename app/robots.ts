@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next'
+import { getSiteUrl } from '@/lib/site-url'
 
-const siteUrl = 'https://v-farms-website-development.vercel.app'
+const siteUrl = getSiteUrl()
 
 export default function robots(): MetadataRoute.Robots {
   return {

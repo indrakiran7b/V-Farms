@@ -1,5 +1,60 @@
 import { adminSupabase } from '@/lib/booking'
+import { requireAdminPageSession } from '@/lib/auth/guard-server'
 
 const money = (value: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(value)
-export default async function AdminDashboard() { const supabase = adminSupabase(); const [{ data: bookings }, { data: holds }, { data: payments }, { data: notifications }] = await Promise.all([supabase.from('stay_bookings').select('id,booking_reference,guest_name,check_in,check_out,booking_status,payment_status,total_inr').order('created_at', { ascending: false }).limit(8), supabase.from('inventory_holds').select('id,check_in,check_out,expires_at,status').eq('status', 'active').gt('expires_at', new Date().toISOString()), supabase.from('payments').select('id,payment_status,captured_amount_paise,expected_amount_paise').order('created_at', { ascending: false }).limit(100), supabase.from('booking_notifications').select('id,status').in('status', ['failed', 'dead_letter'])]); const today = new Date().toISOString().slice(0, 10); const checkIns = (bookings ?? []).filter(b => b.check_in === today).length; const checkOuts = (bookings ?? []).filter(b => b.check_out === today).length; const captured = (payments ?? []).filter(p => p.payment_status === 'captured').reduce((sum, p) => sum + Number(p.captured_amount_paise ?? 0), 0); const cards = [['Check-ins today', checkIns, ''], ['Check-outs today', checkOuts, ''], ['Active holds', holds?.length ?? 0, ''], ['Captured revenue', money(captured), '']]; return <main className="admin-content"><div className="admin-heading"><div><p className="admin-kicker">Estate operations</p><h1>Good morning.</h1><p className="admin-muted">A live view of the V-Farms booking and payment desk.</p></div><a className="admin-secondary" href="/admin/bookings">View bookings</a></div><div className="admin-stat-grid">{cards.map(([label, value]) => <article className="admin-stat" key={String(label)}><span>{label}</span><strong>{value}</strong><small>Live from Supabase</small></article>)}</div><div className="admin-grid"><section className="admin-panel"><div className="admin-panel-heading"><div><p className="admin-kicker">Recent activity</p><h2>Latest bookings</h2></div><a href="/admin/bookings">See all</a></div>{bookings?.length ? <div className="admin-table-wrap"><table><thead><tr><th>Reference</th><th>Guest</th><th>Dates</th><th>Status</th><th>Total</th></tr></thead><tbody>{bookings.map(b => <tr key={b.id}><td><strong>{b.booking_reference}</strong></td><td>{b.guest_name}</td><td>{b.check_in} → {b.check_out}</td><td><span className={`admin-status ${b.booking_status}`}>{b.booking_status}</span></td><td>{money(Number(b.total_inr))}</td></tr>)}</tbody></table></div> : <div className="admin-empty">No bookings have been recorded yet.</div>}</section><section className="admin-panel"><p className="admin-kicker">Needs attention</p><h2>Operational queue</h2><div className="admin-queue"><a href="/admin/calendar"><strong>{holds?.length ?? 0}</strong><span>active inventory holds<Chevron /></span></a><a href="/admin/notifications"><strong>{notifications?.length ?? 0}</strong><span>failed notifications<Chevron /></span></a><a href="/admin/payments"><strong>{(payments ?? []).filter(p => p.payment_status === 'exception').length}</strong><span>payment exceptions<Chevron /></span></a></div></section></div></main> }
+
+export default async function AdminDashboard() {
+  await requireAdminPageSession()
+  const supabase = adminSupabase()
+  const [{ data: bookings }, { data: holds }, { data: payments }, { data: notifications }] = await Promise.all([
+    supabase.from('stay_bookings').select('id,booking_reference,guest_name,check_in,check_out,booking_status,payment_status,total_inr').order('created_at', { ascending: false }).limit(8),
+    supabase.from('inventory_holds').select('id,check_in,check_out,expires_at,status').eq('status', 'active').gt('expires_at', new Date().toISOString()),
+    supabase.from('payments').select('id,payment_status,captured_amount_inr,expected_amount_inr').order('created_at', { ascending: false }).limit(100),
+    supabase.from('booking_notifications').select('id,status').in('status', ['failed', 'dead_letter']),
+  ])
+  const today = new Date().toISOString().slice(0, 10)
+  const checkIns = (bookings ?? []).filter((b) => b.check_in === today).length
+  const checkOuts = (bookings ?? []).filter((b) => b.check_out === today).length
+  const captured = (payments ?? []).filter((p) => p.payment_status === 'captured').reduce((sum, p) => sum + Number(p.captured_amount_inr ?? 0), 0)
+  const cards = [['Check-ins today', checkIns, ''], ['Check-outs today', checkOuts, ''], ['Active holds', holds?.length ?? 0, ''], ['Captured revenue', money(captured), '']]
+  return (
+    <main className="admin-content">
+      <div className="admin-heading">
+        <div>
+          <p className="admin-kicker">Estate operations</p>
+          <h1>Good morning.</h1>
+          <p className="admin-muted">A live view of the V-Farms booking and payment desk.</p>
+        </div>
+        <a className="admin-secondary" href="/admin/bookings">View bookings</a>
+      </div>
+      <div className="admin-stat-grid">{cards.map(([label, value]) => <article className="admin-stat" key={String(label)}><span>{label}</span><strong>{value}</strong><small>Live from Supabase</small></article>)}</div>
+      <div className="admin-grid">
+        <section className="admin-panel">
+          <div className="admin-panel-heading">
+            <div><p className="admin-kicker">Recent activity</p><h2>Latest bookings</h2></div>
+            <a href="/admin/bookings">See all</a>
+          </div>
+          {bookings?.length ? (
+            <div className="admin-table-wrap">
+              <table>
+                <thead><tr><th>Reference</th><th>Guest</th><th>Dates</th><th>Status</th><th>Total</th></tr></thead>
+                <tbody>{bookings.map((b) => <tr key={b.id}><td><strong>{b.booking_reference}</strong></td><td>{b.guest_name}</td><td>{b.check_in} → {b.check_out}</td><td><span className={`admin-status ${b.booking_status}`}>{b.booking_status}</span></td><td>{money(Number(b.total_inr))}</td></tr>)}</tbody>
+              </table>
+            </div>
+          ) : <div className="admin-empty">No bookings have been recorded yet.</div>}
+        </section>
+        <section className="admin-panel">
+          <p className="admin-kicker">Needs attention</p>
+          <h2>Operational queue</h2>
+          <div className="admin-queue">
+            <a href="/admin/calendar"><strong>{holds?.length ?? 0}</strong><span>active inventory holds<Chevron /></span></a>
+            <a href="/admin/notifications"><strong>{notifications?.length ?? 0}</strong><span>failed notifications<Chevron /></span></a>
+            <a href="/admin/payments"><strong>{(payments ?? []).filter((p) => p.payment_status === 'exception').length}</strong><span>payment exceptions<Chevron /></span></a>
+          </div>
+        </section>
+      </div>
+    </main>
+  )
+}
+
 function Chevron() { return <span aria-hidden="true">→</span> }

@@ -6,8 +6,8 @@ export const ROOT = resolve(import.meta.dirname, '..')
 /** Not uploaded to GoDaddy; kept in repo for local pnpm only. */
 export const UPLOAD_EXCLUDE_FILES = new Set(['pnpm-lock.yaml', 'pnpm-workspace.yaml'])
 
-/** GoDaddy/Airo may infer pnpm from project `.airo/`; use platform npm + package-lock.json only. */
-export const UPLOAD_EXCLUDE_DIR_NAMES = new Set(['.airo'])
+/** Directories omitted from GoDaddy upload zip (not application source). */
+export const UPLOAD_EXCLUDE_DIR_NAMES = new Set([])
 
 const EXCLUDED_DIR_NAMES = new Set(['node_modules', '.git', '.next', 'dist', 'coverage', '.turbo'])
 
@@ -108,6 +108,61 @@ export function scanPackListForIssues(packList) {
   return { scanIssues, legacyUrlHits }
 }
 
+const AIRO_CONFIG = join(ROOT, '.airo', 'config.json')
+
+/** When Airo config is present, platform logs hasAiroConfig:true and uses these instead of package.json defaults. */
+export function readAiroConfig() {
+  if (!existsSync(AIRO_CONFIG)) return null
+  try {
+    return JSON.parse(readFileSync(AIRO_CONFIG, 'utf8'))
+  } catch {
+    return { parseError: true }
+  }
+}
+
+export function assertAiroConfigForGoDaddy() {
+  const errors = []
+  const airo = readAiroConfig()
+  if (!airo) {
+    errors.push('.airo/config.json missing (required to override stored Airo pnpm build/start on GoDaddy)')
+    return errors
+  }
+  if (airo.parseError) {
+    errors.push('.airo/config.json is not valid JSON')
+    return errors
+  }
+  const build = String(airo.buildCommand ?? '').trim()
+  const serve = String(airo.serveCommand ?? '').trim()
+  if (build !== 'npm run build') {
+    errors.push(`.airo/config.json buildCommand must be "npm run build" (got: ${JSON.stringify(airo.buildCommand)})`)
+  }
+  if (serve !== 'npm start') {
+    errors.push(`.airo/config.json serveCommand must be "npm start" (got: ${JSON.stringify(airo.serveCommand)})`)
+  }
+  if (/\bpnpm\b/.test(build) || /\bpnpm\b/.test(serve)) {
+    errors.push('.airo/config.json must not reference pnpm (production EACCES on pnpm-native)')
+  }
+  const pm = airo.packageManager
+  if (pm !== undefined && pm !== null && String(pm).trim() !== '' && String(pm).trim() !== 'npm') {
+    errors.push(`.airo/config.json packageManager must be "npm" or omitted (got: ${JSON.stringify(pm)})`)
+  }
+  return errors
+}
+
+export function effectiveGoDaddyCommands() {
+  const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'))
+  const airo = readAiroConfig()
+  return {
+    hasAiroConfig: Boolean(airo && !airo.parseError),
+    installLockfile: 'package-lock.json',
+    packageManagerField: pkg.packageManager ?? '',
+    buildCommand: airo?.buildCommand ?? 'npm run build',
+    serveCommand: airo?.serveCommand ?? 'npm start',
+    packageJsonBuildScript: pkg.scripts?.build ?? '',
+    packageJsonStartScript: pkg.scripts?.start ?? '',
+  }
+}
+
 export function assertNpmOnlyForGoDaddy() {
   const errors = []
   if (!existsSync(join(ROOT, 'package.json'))) {
@@ -126,6 +181,7 @@ export function assertNpmOnlyForGoDaddy() {
   if (pkg.scripts?.start !== 'next start') {
     errors.push('scripts.start must be "next start" for GoDaddy npm start')
   }
+  errors.push(...assertAiroConfigForGoDaddy())
   return errors
 }
 

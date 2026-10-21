@@ -52,7 +52,7 @@ Apply any **future** migrations manually via Supabase CLI (`db push` / your runb
 | Framework | GoDaddy lists **Next.js**; project uses `next build` / `next start` |
 | Start command | `package.json` → `"start": "next start"` — matches `npm start` contract |
 | Port binding | Next.js `next start` respects **`process.env.PORT`** (GoDaddy requirement); no hardcoded port in repo |
-| Lockfile | `pnpm-lock.yaml` + `packageManager` field — GoDaddy contract supports pnpm when lockfile present |
+| Lockfile | Upload **`package-lock.json`** only (exclude `pnpm-lock.yaml` from zip) so the host uses **npm** |
 | Persistent process | Rate limits use **Supabase RPC** (`consume_rate_limit`); suitable for multi-request / single long-lived Node process |
 | No custom server | No `server.js` / Express wrapper — **do not add** unless GoDaddy support requires it |
 
@@ -93,7 +93,7 @@ The public [deploy contract](https://github.com/godaddy/nodejs-hosting-agent-ski
 - Upload **`package-lock.json`** + **`.npmrc`** (no `pnpm-lock.yaml` in zip).
 - **Do not** set `packageManager` in the uploaded `package.json`.
 - **Do not** upload `node_modules/`, `.next/`, or preview build artifacts (platform runs install + build).
-- Project **`.airo/`** is excluded from the zip (Airo-generated config may imply pnpm); there is **no** committed `.airo/config.json` in this repo — if your downloaded archive has one, remove it or redeploy from `pnpm run package:godaddy`.
+- **Airo override:** If deployment logs show `hasAiroConfig: true` with `pnpm run build` / `pnpm start`, the platform is using **`.airo/config.json`** (often persisted from Airo AI Builder). This repo commits **`.airo/config.json`** with `buildCommand`: `npm run build`, `serveCommand`: `npm start`, `packageManager`: `npm`. The upload zip **includes** `.airo/` so each deploy replaces stale pnpm commands. If logs still show pnpm after upload, open **Node.js Hosting → your app → Settings** (or Airo **Settings → Build / Run**) and clear custom build/start overrides to match the repo file, then redeploy Preview.
 
 **Turbopack on PaaS:** Next.js 16 defaults to Turbopack for `next build`, which can fail on restricted hosts (e.g. `globals.css` / OS error 13 when spawning a helper that binds a port). This repo uses **`next build --webpack`** (supported in Next 16.4.0 per `next build --help`).
 

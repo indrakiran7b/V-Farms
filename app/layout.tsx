@@ -21,9 +21,9 @@ export const metadata: Metadata = {
     description: 'A private farm stay and event venue near Medchal and Hyderabad, Telangana.',
     locale: 'en_IN',
     images: [{
-      url: `${siteUrl}/vfarms-hero.png`,
+      url: `${siteUrl}/images/v-farms-logo-transparent.png`,
       width: 1200,
-      height: 630,
+      height: 1200,
       alt: 'V-Farms private farm stay near Medchal, Telangana',
     }],
   },
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'V-Farms | Private Farm Stay Near Medchal, Telangana',
     description: 'A private farm getaway and gathering place near Medchal and Hyderabad.',
-    images: [`${siteUrl}/vfarms-hero.png`],
+    images: [`${siteUrl}/images/v-farms-logo-transparent.png`],
   },
   generator: 'V-Farms',
   icons: {
@@ -45,12 +45,12 @@ export const metadata: Metadata = {
         media: '(prefers-color-scheme: dark)',
       },
       {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-        sizes: 'any',
+        url: '/images/v-farms-logo-transparent.png',
+        type: 'image/png',
+        sizes: '1200x1200',
       },
     ],
-    apple: '/apple-icon.png',
+    apple: '/images/v-farms-logo-transparent.png',
   },
 }
 

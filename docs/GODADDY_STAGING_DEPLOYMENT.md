@@ -20,7 +20,7 @@
 
 - **Next.js** `16.4.0`, **React** 19, App Router
 - **Scripts:** `"build": "next build --webpack"`, `"start": "next start"` (no custom server; **Webpack** avoids Turbopack CSS/port-binding failures on restricted PaaS builders)
-- **Package manager (local):** `pnpm@12.3.4` + `pnpm-lock.yaml` (retained)
+- **Package manager (local):** optional `pnpm-lock.yaml` for dev; **no** `packageManager` field in `package.json` (avoids Corepack/pnpm on GoDaddy)
 - **GoDaddy install:** **`package-lock.json`** + root `.npmrc` (npm registry; platform docs emphasize **npm**). Upload zip **excludes** `pnpm-lock.yaml` (kept in repo for local pnpm only).
 - **Node:** `"engines": { "node": "22.x" }` (GoDaddy runtime is Node **22**; `engines` does not override host)
 - **Site URL:** `lib/site-url.ts` → `NEXT_PUBLIC_SITE_URL` with fallback `https://v-farms.in`
@@ -87,6 +87,13 @@ The public [deploy contract](https://github.com/godaddy/nodejs-hosting-agent-ski
 | **HTTPS / CDN / WAF** | Automatic on publish — confirm subdomain SSL after DNS |
 | **Preview vs publish URL** | Preview is account-private; staging subdomain = **publish** + DNS |
 | **Outbound HTTPS** | Required to Supabase, Razorpay, optional Resend — confirm no egress block |
+
+**Package manager (production EACCES fix):** GoDaddy’s [deploy contract](https://github.com/godaddy/nodejs-hosting-agent-skill/blob/main/skills/godaddy-nodejs-hosting/contract.md) picks **npm, pnpm, or yarn** from the **lockfile** or **`packageManager`** in `package.json`. Official [app requirements](https://developer.godaddy.com/en/docs/api-users/hosting/app-requirements) describe **`npm run build`** and **`npm start`**. If the archive includes `pnpm-lock.yaml` and/or `"packageManager": "pnpm@…"`, production may run **`pnpm start`** — which can fail with **`pnpm-native: spawnSync EACCES`**. This repo targets **npm only on the host**:
+
+- Upload **`package-lock.json`** + **`.npmrc`** (no `pnpm-lock.yaml` in zip).
+- **Do not** set `packageManager` in the uploaded `package.json`.
+- **Do not** upload `node_modules/`, `.next/`, or preview build artifacts (platform runs install + build).
+- Project **`.airo/`** is excluded from the zip (Airo-generated config may imply pnpm); there is **no** committed `.airo/config.json` in this repo — if your downloaded archive has one, remove it or redeploy from `pnpm run package:godaddy`.
 
 **Turbopack on PaaS:** Next.js 16 defaults to Turbopack for `next build`, which can fail on restricted hosts (e.g. `globals.css` / OS error 13 when spawning a helper that binds a port). This repo uses **`next build --webpack`** (supported in Next 16.4.0 per `next build --help`).
 

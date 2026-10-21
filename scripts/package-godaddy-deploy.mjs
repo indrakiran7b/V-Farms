@@ -123,9 +123,11 @@ function main() {
       'node_modules/',
       '.git/',
       '.next/',
-      '.env*',
+      '.env* (except .env.example template)',
       'supabase/.temp/',
-      'pnpm-lock.yaml (repo only — omitted from zip)',
+      'pnpm-lock.yaml',
+      'pnpm-workspace.yaml',
+      '.airo/ (may force pnpm — omit; use npm scripts in package.json)',
       'dist/ (output only; not inside zip)',
     ],
     requiredInZip: [

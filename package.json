@@ -45,6 +45,5 @@
   },
   "devDependencies": {
     "tsx": "4.23.15"
-  },
-  "packageManager": "pnpm@12.3.4"
+  }
 }

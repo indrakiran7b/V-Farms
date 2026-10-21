@@ -6,6 +6,9 @@ export const ROOT = resolve(import.meta.dirname, '..')
 /** Not uploaded to GoDaddy; kept in repo for local pnpm only. */
 export const UPLOAD_EXCLUDE_FILES = new Set(['pnpm-lock.yaml', 'pnpm-workspace.yaml'])
 
+/** GoDaddy/Airo may infer pnpm from project `.airo/`; use platform npm + package-lock.json only. */
+export const UPLOAD_EXCLUDE_DIR_NAMES = new Set(['.airo'])
+
 const EXCLUDED_DIR_NAMES = new Set(['node_modules', '.git', '.next', 'dist', 'coverage', '.turbo'])
 
 export function normalizeRel(absPath) {
@@ -34,6 +37,7 @@ function isSecretBasename(name) {
 
 function shouldSkipDir(relPath, dirName) {
   if (EXCLUDED_DIR_NAMES.has(dirName)) return true
+  if (UPLOAD_EXCLUDE_DIR_NAMES.has(dirName)) return true
   if (relPath === 'supabase/.temp' || relPath.startsWith('supabase/.temp/')) return true
   return false
 }
@@ -104,11 +108,30 @@ export function scanPackListForIssues(packList) {
   return { scanIssues, legacyUrlHits }
 }
 
-export function assertRepoLockfiles() {
+export function assertNpmOnlyForGoDaddy() {
   const errors = []
-  if (!existsSync(join(ROOT, 'package.json'))) errors.push('package.json missing')
+  if (!existsSync(join(ROOT, 'package.json'))) {
+    errors.push('package.json missing')
+    return errors
+  }
+  const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'))
+  if (pkg.packageManager) {
+    errors.push(
+      'package.json must not set packageManager (GoDaddy selects pnpm/corepack and runs pnpm start — use npm + package-lock.json only)',
+    )
+  }
+  if (pkg.scripts?.build && !String(pkg.scripts.build).includes('next build')) {
+    errors.push('scripts.build should run next build --webpack')
+  }
+  if (pkg.scripts?.start !== 'next start') {
+    errors.push('scripts.start must be "next start" for GoDaddy npm start')
+  }
+  return errors
+}
+
+export function assertRepoLockfiles() {
+  const errors = assertNpmOnlyForGoDaddy()
   if (!existsSync(join(ROOT, 'package-lock.json'))) errors.push('package-lock.json missing (run pnpm run lockfile:sync-npm)')
-  if (!existsSync(join(ROOT, 'pnpm-lock.yaml'))) errors.push('pnpm-lock.yaml missing (local pnpm dev)')
   if (!existsSync(join(ROOT, '.npmrc'))) errors.push('.npmrc missing')
   if (!existsSync(join(ROOT, 'lib/site-url.ts'))) errors.push('lib/site-url.ts missing')
   return errors

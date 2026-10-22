@@ -124,8 +124,11 @@ export function readAiroConfig() {
 
 const CANONICAL_BUILD = 'npm run build'
 const CANONICAL_START = 'npm start'
-const LEGACY_PROD_BUILD = 'NODE_ENV=production npm run build'
-const LEGACY_PROD_START = 'NODE_ENV=production npm start'
+const DEPLOY_BUILD = 'NODE_ENV=production npm run build'
+const DEPLOY_START = 'NODE_ENV=production npm start'
+
+const ACCEPTED_BUILDS = new Set([CANONICAL_BUILD, DEPLOY_BUILD])
+const ACCEPTED_STARTS = new Set([CANONICAL_START, DEPLOY_START])
 
 function normalizeHostingCommand(value) {
   return String(value ?? '').trim().replace(/\s+/g, ' ')
@@ -147,36 +150,27 @@ function assertProductionHostingCommand(label, command) {
   return errors
 }
 
-export function assertAiroConfigForGoDaddy() {
+function validateAiroRecord(airo) {
   const errors = []
-  const airo = readAiroConfig()
-  if (!airo) {
-    errors.push('.airo/config.json missing (required to override stored Airo pnpm build/start on GoDaddy)')
-    return errors
-  }
-  if (airo.parseError) {
-    errors.push('.airo/config.json is not valid JSON')
-    return errors
-  }
   const build = normalizeHostingCommand(airo.buildCommand)
   const serve = normalizeHostingCommand(airo.serveCommand)
   const dev = normalizeHostingCommand(airo.devCommand)
 
-  const buildOk = build === CANONICAL_BUILD || build === LEGACY_PROD_BUILD
-  const serveOk = serve === CANONICAL_START || serve === LEGACY_PROD_START
-  if (!buildOk) {
+  if (!ACCEPTED_BUILDS.has(build)) {
     errors.push(
-      `.airo/config.json buildCommand must be "${CANONICAL_BUILD}" (got: ${JSON.stringify(airo.buildCommand)})`,
+      `.airo/config.json buildCommand must be npm production build (e.g. "${DEPLOY_BUILD}") (got: ${JSON.stringify(airo.buildCommand)})`,
     )
   }
-  if (!serveOk) {
+  if (!ACCEPTED_STARTS.has(serve)) {
     errors.push(
-      `.airo/config.json serveCommand must be "${CANONICAL_START}" (got: ${JSON.stringify(airo.serveCommand)})`,
+      `.airo/config.json serveCommand must be npm production start (e.g. "${DEPLOY_START}") (got: ${JSON.stringify(airo.serveCommand)})`,
     )
   }
-  if (dev && dev !== CANONICAL_START && dev !== LEGACY_PROD_START) {
+  if (!dev) {
+    errors.push(`.airo/config.json devCommand is required (use "${DEPLOY_START}" — not verified as Preview-only control)`)
+  } else if (!ACCEPTED_STARTS.has(dev)) {
     errors.push(
-      `.airo/config.json devCommand must be "${CANONICAL_START}" when set (got: ${JSON.stringify(airo.devCommand)})`,
+      `.airo/config.json devCommand must match serveCommand npm start (got: ${JSON.stringify(airo.devCommand)})`,
     )
   }
 
@@ -195,11 +189,51 @@ export function assertAiroConfigForGoDaddy() {
     )
   }
 
-  const pm = airo.packageManager
-  if (pm !== undefined && pm !== null && String(pm).trim() !== '' && String(pm).trim() !== 'npm') {
-    errors.push(`.airo/config.json packageManager must be "npm" or omitted (got: ${JSON.stringify(pm)})`)
+  const pm = String(airo.packageManager ?? '').trim()
+  if (pm !== 'npm') {
+    errors.push(
+      `.airo/config.json packageManager must be "npm" (empty string on host lets GoDaddy pick pnpm from pnpm-lock.yaml) (got: ${JSON.stringify(airo.packageManager)})`,
+    )
   }
   return errors
+}
+
+export function assertAiroConfigForGoDaddy() {
+  const airo = readAiroConfig()
+  if (!airo) {
+    return ['.airo/config.json missing (required to override stored Airo pnpm build/start on GoDaddy)']
+  }
+  if (airo.parseError) {
+    return ['.airo/config.json is not valid JSON']
+  }
+  return validateAiroRecord(airo)
+}
+
+/** Upload zip must not ship pnpm lockfiles (platform may run pnpm start → EACCES). */
+export function assertUploadExcludesPnpmLock(packList) {
+  const errors = []
+  for (const { rel } of packList) {
+    if (rel === 'pnpm-lock.yaml' || rel === 'pnpm-workspace.yaml') {
+      errors.push(`upload must not include ${rel} (use package-lock.json + .airo packageManager npm on host)`)
+    }
+  }
+  if (!packList.some(({ rel }) => rel === '.airo/config.json')) {
+    errors.push('upload must include .airo/config.json (overrides stored Airo pnpm build/start)')
+  }
+  return errors
+}
+
+export function parseAiroConfigFromJsonText(text) {
+  try {
+    return JSON.parse(text)
+  } catch {
+    return null
+  }
+}
+
+export function assertAiroObjectForGoDaddy(airo) {
+  if (!airo) return ['.airo/config.json is not valid JSON']
+  return validateAiroRecord(airo)
 }
 
 export function effectiveGoDaddyCommands() {
@@ -242,6 +276,8 @@ export function assertNpmOnlyForGoDaddy() {
 
 export function assertRepoLockfiles() {
   const errors = assertNpmOnlyForGoDaddy()
+  const { packList } = collectUploadFiles()
+  errors.push(...assertUploadExcludesPnpmLock(packList))
   if (!existsSync(join(ROOT, 'package-lock.json'))) errors.push('package-lock.json missing (run pnpm run lockfile:sync-npm)')
   if (!existsSync(join(ROOT, '.npmrc'))) errors.push('.npmrc missing')
   if (!existsSync(join(ROOT, 'lib/site-url.ts'))) errors.push('lib/site-url.ts missing')

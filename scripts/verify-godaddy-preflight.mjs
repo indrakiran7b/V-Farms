@@ -12,8 +12,11 @@ import { spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import {
   ROOT,
+  assertAiroObjectForGoDaddy,
   assertRepoLockfiles,
+  assertUploadExcludesPnpmLock,
   collectUploadFiles,
+  parseAiroConfigFromJsonText,
   scanPackListForIssues,
 } from './godaddy-pack-list.mjs'
 
@@ -55,9 +58,33 @@ function main() {
     process.exit(1)
   }
 
+  const uploadErrors = assertUploadExcludesPnpmLock(packList)
+  if (uploadErrors.length) {
+    console.error('verify-godaddy-preflight: upload set invalid for GoDaddy npm deploy:')
+    for (const e of uploadErrors) console.error(`  - ${e}`)
+    process.exit(1)
+  }
+
   const tmp = mkdtempSync(join(tmpdir(), 'vfarms-godaddy-'))
   console.log(`verify-godaddy-preflight: using ${tmp}`)
   copyUploadTree(tmp, packList)
+
+  if (existsSync(join(tmp, 'pnpm-lock.yaml'))) {
+    console.error('verify-godaddy-preflight: pnpm-lock.yaml must not appear in deployment copy.')
+    rmSync(tmp, { recursive: true, force: true })
+    process.exit(1)
+  }
+
+  const airoPath = join(tmp, '.airo', 'config.json')
+  const airoText = readFileSync(airoPath, 'utf8')
+  const airoObj = parseAiroConfigFromJsonText(airoText)
+  const airoErrors = assertAiroObjectForGoDaddy(airoObj)
+  if (airoErrors.length) {
+    console.error('verify-godaddy-preflight: deployment .airo/config.json invalid:')
+    for (const e of airoErrors) console.error(`  - ${e}`)
+    rmSync(tmp, { recursive: true, force: true })
+    process.exit(1)
+  }
 
   const lockBefore = sha256(join(ROOT, 'package-lock.json'))
   const lockCopied = sha256(join(tmp, 'package-lock.json'))
@@ -112,6 +139,8 @@ function main() {
         uploadFileCount: packList.length,
         lockfileSha256: lockBefore,
         godaddyLockfile: 'package-lock.json (pnpm-lock.yaml excluded from upload)',
+        deploymentAiroConfig: airoObj,
+        effectiveServeCommand: airoObj?.serveCommand ?? '',
         siteUrlHelper: 'lib/site-url.ts',
       },
       null,

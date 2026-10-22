@@ -16,11 +16,13 @@ import { spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import {
   ROOT,
+  assertAiroObjectForGoDaddy,
   assertRepoLockfiles,
   collectUploadFiles,
   effectiveGoDaddyCommands,
   isEnvFile,
   normalizeRel,
+  parseAiroConfigFromJsonText,
   scanPackListForIssues,
 } from './godaddy-pack-list.mjs'
 
@@ -33,6 +35,12 @@ function sha256File(abs) {
   const hash = createHash('sha256')
   hash.update(readFileSync(abs))
   return hash.digest('hex')
+}
+
+function readMemberFromZip(relPath) {
+  const r = spawnSync('tar', ['-xOf', OUT_ZIP, relPath], { cwd: ROOT, encoding: 'utf8' })
+  if (r.status !== 0) return null
+  return r.stdout
 }
 
 function createZip(relPaths) {
@@ -107,6 +115,24 @@ function main() {
 
   createZip(relPaths)
 
+  const airoInZipText = readMemberFromZip('.airo/config.json')
+  const airoInZip = parseAiroConfigFromJsonText(airoInZipText ?? '')
+  const airoZipErrors = assertAiroObjectForGoDaddy(airoInZip)
+  if (!airoInZipText || airoZipErrors.length) {
+    console.error('package-godaddy-deploy: zip .airo/config.json missing or invalid:')
+    for (const e of airoZipErrors) console.error(`  - ${e}`)
+    process.exit(1)
+  }
+  if (/\bpnpm\b/.test(airoInZipText)) {
+    console.error('package-godaddy-deploy: zip .airo/config.json must not reference pnpm.')
+    process.exit(1)
+  }
+  const pnpmInZip = spawnSync('tar', ['-tf', OUT_ZIP], { cwd: ROOT, encoding: 'utf8' })
+  if (pnpmInZip.stdout?.includes('pnpm-lock.yaml')) {
+    console.error('package-godaddy-deploy: zip must not contain pnpm-lock.yaml.')
+    process.exit(1)
+  }
+
   const zipStat = statSync(OUT_ZIP)
   const lockSha = sha256File(join(ROOT, 'package-lock.json'))
 
@@ -131,6 +157,7 @@ function main() {
       'dist/ (output only; not inside zip)',
     ],
     effectiveCommands: effectiveGoDaddyCommands(),
+    airoConfigInZip: airoInZip,
     requiredInZip: [
       'package.json',
       'package-lock.json',

@@ -16,7 +16,7 @@ export async function adminSignIn(
   if (!hasPublicSupabaseConfig()) {
     return {
       error:
-        'Admin sign-in is not configured. Set NEXT_PUBLIC_SUPABASE_URL and your anon/publishable key in GoDaddy secrets, then restart preview.',
+        'Admin sign-in is not configured. Set NEXT_PUBLIC_SUPABASE_URL and your anon/publishable key in hosting environment settings, then redeploy.',
     }
   }
 

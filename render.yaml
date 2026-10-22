@@ -1,0 +1,24 @@
+# Render Blueprint — V-Farms (Node web service, not static export).
+# Connect this repo in Render and apply the blueprint, or create a Web Service manually
+# with the same build/start commands. Set all secrets in the Render dashboard (never here).
+
+services:
+  - type: web
+    name: vfarms
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: "22.12.0"
+      - key: NODE_ENV
+        value: production
+      # Set in dashboard (names only — add values manually):
+      # NEXT_PUBLIC_SITE_URL — https://vfarms.in (set before first build)
+      # NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (or ANON_KEY)
+      # SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+      # RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, RAZORPAY_WEBHOOK_SECRET
+      # Optional: RESEND_API_KEY, EMAIL_FROM

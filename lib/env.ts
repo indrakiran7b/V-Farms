@@ -1,39 +1,49 @@
+export type EnvVarTiming = 'build' | 'runtime' | 'build-and-runtime'
+
 export type EnvVarGroup = {
   name: string
   requiredFor: string
   variables: string[]
+  /** When the host must provide the variable (Render: rebuild after changing `build` vars). */
+  timing?: EnvVarTiming
 }
 
 /** Documented environment variables (names only — never log values). */
 export const ENV_CATALOG: EnvVarGroup[] = [
   {
     name: 'Public site origin (metadata, SEO)',
-    requiredFor: 'Canonical URLs on GoDaddy staging/production builds',
+    requiredFor: 'Canonical URLs on Render/GoDaddy production builds',
+    timing: 'build',
     variables: ['NEXT_PUBLIC_SITE_URL'],
   },
   {
     name: 'Public Supabase (browser + middleware)',
     requiredFor: 'Admin auth session and client-side Supabase',
+    timing: 'build',
     variables: ['NEXT_PUBLIC_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY', 'NEXT_PUBLIC_SUPABASE_ANON_KEY'],
   },
   {
     name: 'Server Supabase (API routes, booking)',
     requiredFor: 'Quotes, holds, payments, admin data',
+    timing: 'runtime',
     variables: ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'SUPABASE_SECRET_KEY'],
   },
   {
     name: 'Razorpay checkout',
     requiredFor: 'Create order and verify payment on site',
+    timing: 'runtime',
     variables: ['RAZORPAY_KEY_ID', 'RAZORPAY_KEY_SECRET'],
   },
   {
     name: 'Razorpay webhooks',
     requiredFor: 'Async payment capture confirmation',
+    timing: 'runtime',
     variables: ['RAZORPAY_WEBHOOK_SECRET'],
   },
   {
     name: 'Transactional email (optional)',
     requiredFor: 'Booking confirmation email delivery via Resend',
+    timing: 'runtime',
     variables: ['RESEND_API_KEY', 'EMAIL_FROM'],
   },
 ]

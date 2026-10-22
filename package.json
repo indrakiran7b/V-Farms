@@ -17,6 +17,7 @@
     "env:check": "node --import ./tests/register.mjs --experimental-strip-types scripts/check-staging-env.mjs",
     "package:godaddy": "node scripts/package-godaddy-deploy.mjs",
     "verify:godaddy": "node scripts/verify-godaddy-preflight.mjs",
+    "verify:render": "node scripts/verify-render-readiness.mjs",
     "lockfile:sync-npm": "node scripts/sync-npm-lock.mjs",
     "supabase:version": "npx supabase --version"
   },

@@ -10,7 +10,7 @@ export default function AdminLoginForm({ configured }: { configured: boolean }) 
   const error =
     state.error ??
     (!configured
-      ? 'Admin sign-in is not configured. Set NEXT_PUBLIC_SUPABASE_URL and your anon/publishable key in GoDaddy secrets, then restart preview.'
+      ? 'Admin sign-in is not configured. Set NEXT_PUBLIC_SUPABASE_URL and your anon/publishable key in hosting environment settings, then redeploy.'
       : undefined)
 
   return (

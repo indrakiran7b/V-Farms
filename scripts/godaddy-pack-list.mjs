@@ -9,7 +9,8 @@ export const UPLOAD_EXCLUDE_FILES = new Set(['pnpm-lock.yaml', 'pnpm-workspace.y
 /** Directories omitted from GoDaddy upload zip (not application source). */
 export const UPLOAD_EXCLUDE_DIR_NAMES = new Set([])
 
-const EXCLUDED_DIR_NAMES = new Set(['node_modules', '.git', '.next', 'dist', 'coverage', '.turbo'])
+const EXCLUDED_DIR_NAMES = new Set(['node_modules', '.git', '.next', 'dist', 'coverage', '.turbo', '.vercel'])
+const EXCLUDED_FILE_PREFIXES = ['__v0_']
 
 export function normalizeRel(absPath) {
   return relative(ROOT, absPath).split(sep).join('/')
@@ -67,6 +68,7 @@ export function collectUploadFiles() {
       continue
     }
     if (UPLOAD_EXCLUDE_FILES.has(rel)) continue
+    if (EXCLUDED_FILE_PREFIXES.some((prefix) => basename(rel).startsWith(prefix))) continue
     if (isSecretBasename(basename(rel))) {
       included.push({ abs, rel, blocked: 'secret_filename' })
       continue
@@ -120,6 +122,29 @@ export function readAiroConfig() {
   }
 }
 
+const PROD_BUILD = 'NODE_ENV=production npm run build'
+const PROD_START = 'NODE_ENV=production npm start'
+
+function normalizeHostingCommand(value) {
+  return String(value ?? '').trim().replace(/\s+/g, ' ')
+}
+
+function assertProductionHostingCommand(label, command) {
+  const errors = []
+  const cmd = normalizeHostingCommand(command)
+  if (!cmd) {
+    errors.push(`.airo/config.json ${label} is required`)
+    return errors
+  }
+  if (/\bpnpm\b|\byarn\b/.test(cmd)) {
+    errors.push(`.airo/config.json ${label} must not use pnpm/yarn (EACCES on host)`)
+  }
+  if (/\bnext dev\b|\bnpm run dev\b|\bpnpm dev\b/.test(cmd)) {
+    errors.push(`.airo/config.json ${label} must not run next dev (use production npm start)`)
+  }
+  return errors
+}
+
 export function assertAiroConfigForGoDaddy() {
   const errors = []
   const airo = readAiroConfig()
@@ -131,21 +156,37 @@ export function assertAiroConfigForGoDaddy() {
     errors.push('.airo/config.json is not valid JSON')
     return errors
   }
-  const build = String(airo.buildCommand ?? '').trim()
-  const serve = String(airo.serveCommand ?? '').trim()
-  if (build !== 'npm run build') {
-    errors.push(`.airo/config.json buildCommand must be "npm run build" (got: ${JSON.stringify(airo.buildCommand)})`)
-  }
-  const serveOk =
-    serve === 'npm start' || serve === 'node node_modules/next/dist/bin/next start'
-  if (!serveOk) {
+  const build = normalizeHostingCommand(airo.buildCommand)
+  const serve = normalizeHostingCommand(airo.serveCommand)
+  const dev = normalizeHostingCommand(airo.devCommand)
+
+  if (build !== PROD_BUILD && build !== 'npm run build') {
     errors.push(
-      `.airo/config.json serveCommand must be "npm start" or "node node_modules/next/dist/bin/next start" (got: ${JSON.stringify(airo.serveCommand)})`,
+      `.airo/config.json buildCommand must be "${PROD_BUILD}" (got: ${JSON.stringify(airo.buildCommand)})`,
     )
   }
-  if (/\bpnpm\b/.test(build) || /\bpnpm\b/.test(serve)) {
-    errors.push('.airo/config.json must not reference pnpm (production EACCES on pnpm-native)')
+  if (serve !== PROD_START && serve !== 'npm start') {
+    errors.push(
+      `.airo/config.json serveCommand must be "${PROD_START}" (got: ${JSON.stringify(airo.serveCommand)})`,
+    )
   }
+  if (dev && dev !== PROD_START && dev !== 'npm start') {
+    errors.push(
+      `.airo/config.json devCommand must be "${PROD_START}" when set (got: ${JSON.stringify(airo.devCommand)})`,
+    )
+  }
+  if (!dev) {
+    errors.push(`.airo/config.json devCommand must be "${PROD_START}" (Preview must not default to npm run dev)`)
+  }
+
+  for (const [label, cmd] of [
+    ['buildCommand', build],
+    ['serveCommand', serve],
+    ['devCommand', dev],
+  ]) {
+    errors.push(...assertProductionHostingCommand(label, cmd))
+  }
+
   const pm = airo.packageManager
   if (pm !== undefined && pm !== null && String(pm).trim() !== '' && String(pm).trim() !== 'npm') {
     errors.push(`.airo/config.json packageManager must be "npm" or omitted (got: ${JSON.stringify(pm)})`)
@@ -160,8 +201,9 @@ export function effectiveGoDaddyCommands() {
     hasAiroConfig: Boolean(airo && !airo.parseError),
     installLockfile: 'package-lock.json',
     packageManagerField: pkg.packageManager ?? '',
-    buildCommand: airo?.buildCommand ?? 'npm run build',
-    serveCommand: airo?.serveCommand ?? 'npm start',
+    devCommand: airo?.devCommand ?? '',
+    buildCommand: airo?.buildCommand ?? PROD_BUILD,
+    serveCommand: airo?.serveCommand ?? PROD_START,
     packageJsonBuildScript: pkg.scripts?.build ?? '',
     packageJsonStartScript: pkg.scripts?.start ?? '',
   }

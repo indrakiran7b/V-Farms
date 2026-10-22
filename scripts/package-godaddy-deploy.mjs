@@ -135,7 +135,7 @@ function main() {
       'package.json',
       'package-lock.json',
       '.npmrc',
-      '.airo/config.json',
+      '.airo/config.json (build/serve/dev → production npm, not next dev)',
       'lib/site-url.ts',
       'app/',
       'public/',

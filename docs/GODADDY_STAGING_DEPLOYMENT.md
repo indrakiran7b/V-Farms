@@ -93,9 +93,14 @@ The public [deploy contract](https://github.com/godaddy/nodejs-hosting-agent-ski
 - Upload **`package-lock.json`** + **`.npmrc`** (no `pnpm-lock.yaml` in zip).
 - **Do not** set `packageManager` in the uploaded `package.json`.
 - **Do not** upload `node_modules/`, `.next/`, or preview build artifacts (platform runs install + build).
-- **Airo override:** If deployment logs show `hasAiroConfig: true` with `pnpm run build` / `pnpm start`, the platform is using **`.airo/config.json`** (often persisted from Airo AI Builder). This repo commits **`.airo/config.json`** with `buildCommand`: `npm run build`, `serveCommand`: `node node_modules/next/dist/bin/next start` (avoids Corepack/pnpm on publish), `packageManager`: `npm`. The upload zip **includes** `.airo/` so each deploy replaces stale pnpm commands. If logs still show pnpm after upload, open **Node.js Hosting → your app → Settings** (or Airo **Settings → Build / Run**) and clear custom build/start overrides to match the repo file, then redeploy Preview.
+- **Airo override:** GoDaddy/Airo reads **`.airo/config.json`** for build, serve, and (on Preview) **dev** commands. This repo sets:
+  - `buildCommand`: `NODE_ENV=production npm run build`
+  - `serveCommand`: `NODE_ENV=production npm start`
+  - `devCommand`: `NODE_ENV=production npm start` (Preview must **not** fall back to `npm run dev` / Turbopack)
+  - `packageManager`: `npm`
+  If runtime logs show **`> next dev`**, **`Turbopack`**, or **`Watchpack Error: EACCES … scandir '/'`**, the host is running the **development server** — fix **Settings → Build / Run** (and any Preview “development mode” toggle) to match the commands above, then **Update Preview**.
 
-**Publish / runtime logs (`pnpm-native EACCES`):** **Publish** may reuse the preview artifact (`Archive size: 225MB+`, `node_modules and build output present from preview - serving directly`) and a **dashboard-stored** serve command (`NODE_ENV=production pnpm start`) even when Git has npm. Fix order: (1) **Settings → Build/Run** — set start to `node node_modules/next/dist/bin/next start` or `npm start`, build to `npm run build`; (2) **Update Preview** on `feature/staging-prep` (latest commit); (3) **Runtime Logs** on preview must **not** mention `pnpm start`; (4) then **Publish to Live**. Do not publish while logs still show `pnpm`.
+**Publish / runtime logs (`pnpm-native EACCES` or `next dev`):** **Publish** may reuse a stale preview artifact (`Archive size: 225MB+`, `node_modules and build output present from preview - serving directly`) or dashboard overrides (`pnpm start`, `npm run dev`). Fix order: (1) **Settings → Build/Run** — build `NODE_ENV=production npm run build`, start/dev `NODE_ENV=production npm start`; (2) **Update Preview** on `feature/staging-prep`; (3) **Runtime Logs** must show **`next start`** / **`next build --webpack`**, never **`next dev`** or **pnpm**; (4) then **Publish to Live**.
 
 **Turbopack on PaaS:** Next.js 16 defaults to Turbopack for `next build`, which can fail on restricted hosts (e.g. `globals.css` / OS error 13 when spawning a helper that binds a port). This repo uses **`next build --webpack`** (supported in Next 16.4.0 per `next build --help`).
 

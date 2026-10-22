@@ -93,16 +93,10 @@ The public [deploy contract](https://github.com/godaddy/nodejs-hosting-agent-ski
 - Upload **`package-lock.json`** + **`.npmrc`** (no `pnpm-lock.yaml` in zip).
 - **Do not** set `packageManager` in the uploaded `package.json`.
 - **Do not** upload `node_modules/`, `.next/`, or preview build artifacts (platform runs install + build).
-- **Airo override:** GoDaddy/Airo reads **`.airo/config.json`** for build, serve, and (on Preview) **dev** commands. This repo sets:
-  - `buildCommand`: `NODE_ENV=production npm run build`
-  - `serveCommand`: `NODE_ENV=production npm start`
-  - `devCommand`: `NODE_ENV=production npm start` (Preview must **not** fall back to `npm run dev` / Turbopack)
-  - `packageManager`: `npm`
-  If runtime logs show **`> next dev`**, **`Turbopack`**, or **`Watchpack Error: EACCES … scandir '/'`**, the host is running the **development server** — fix **Settings → Build / Run** (and any Preview “development mode” toggle) to match the commands above, then **Update Preview**.
-
-**Preview still runs `next dev` / Turbopack:** Some Airo Preview flows invoke **`npm run dev`** regardless of `.airo` `devCommand`. This repo’s **`dev` script** (`scripts/dev-server.mjs`) detects GoDaddy’s **`/app`** working directory and runs **`npm run build`** + **`npm start`** instead of Turbopack. After pull, confirm **Runtime Logs** show **`next start`**, not **`next dev`**. Align **Settings → Build / Run** with the commands in [`.airo/config.schema.md`](../.airo/config.schema.md).
-
-**`.airo/config.json` Git conflict:** Accept repo build/serve/dev commands (see `.airo/config.schema.md`); preserve unrelated dashboard keys if present; **Update Preview**.
+- **Airo override:** See [`.airo/config.schema.md`](../.airo/config.schema.md). Committed **`.airo/config.json`**: `npm run build`, `npm start`, `npm ci --omit=dev`, `packageManager`: `npm`. The host may prepend `NODE_ENV=production` in logs — do not duplicate in `.airo` unless the dashboard requires it.
+- **Clean deploy branch:** Use Git branch **`production`** in GoDaddy (Pull from GitHub → branch **`production`**) so Preview is isolated from `feature/staging-prep`.
+- **Preview / Turbopack:** If logs show **`> next dev`**, use **`scripts/dev-server.mjs`** (cwd `/app` → production build + start), **Settings → Build / Run**, and host **`.airo`** merge steps in the schema doc.
+- **`.airo/config.json` Git conflict on host:** Replace the server copy with the committed file or discard host-local edits, then pull branch **`production`** again.
 
 **Publish / runtime logs (`pnpm-native EACCES` or `next dev`):** **Publish** may reuse a stale preview artifact (`Archive size: 225MB+`, `node_modules and build output present from preview - serving directly`) or dashboard overrides (`pnpm start`, `npm run dev`). Fix order: (1) **Settings → Build/Run** — build `NODE_ENV=production npm run build`, start/dev `NODE_ENV=production npm start`; (2) **Update Preview** on `feature/staging-prep`; (3) **Runtime Logs** must show **`next start`** / **`next build --webpack`**, never **`next dev`** or **pnpm**; (4) then **Publish to Live**.
 

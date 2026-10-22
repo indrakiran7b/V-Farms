@@ -122,8 +122,10 @@ export function readAiroConfig() {
   }
 }
 
-const PROD_BUILD = 'NODE_ENV=production npm run build'
-const PROD_START = 'NODE_ENV=production npm start'
+const CANONICAL_BUILD = 'npm run build'
+const CANONICAL_START = 'npm start'
+const LEGACY_PROD_BUILD = 'NODE_ENV=production npm run build'
+const LEGACY_PROD_START = 'NODE_ENV=production npm start'
 
 function normalizeHostingCommand(value) {
   return String(value ?? '').trim().replace(/\s+/g, ' ')
@@ -160,31 +162,37 @@ export function assertAiroConfigForGoDaddy() {
   const serve = normalizeHostingCommand(airo.serveCommand)
   const dev = normalizeHostingCommand(airo.devCommand)
 
-  if (build !== PROD_BUILD && build !== 'npm run build') {
+  const buildOk = build === CANONICAL_BUILD || build === LEGACY_PROD_BUILD
+  const serveOk = serve === CANONICAL_START || serve === LEGACY_PROD_START
+  if (!buildOk) {
     errors.push(
-      `.airo/config.json buildCommand must be "${PROD_BUILD}" (got: ${JSON.stringify(airo.buildCommand)})`,
+      `.airo/config.json buildCommand must be "${CANONICAL_BUILD}" (got: ${JSON.stringify(airo.buildCommand)})`,
     )
   }
-  if (serve !== PROD_START && serve !== 'npm start') {
+  if (!serveOk) {
     errors.push(
-      `.airo/config.json serveCommand must be "${PROD_START}" (got: ${JSON.stringify(airo.serveCommand)})`,
+      `.airo/config.json serveCommand must be "${CANONICAL_START}" (got: ${JSON.stringify(airo.serveCommand)})`,
     )
   }
-  if (dev && dev !== PROD_START && dev !== 'npm start') {
+  if (dev && dev !== CANONICAL_START && dev !== LEGACY_PROD_START) {
     errors.push(
-      `.airo/config.json devCommand must be "${PROD_START}" when set (got: ${JSON.stringify(airo.devCommand)})`,
+      `.airo/config.json devCommand must be "${CANONICAL_START}" when set (got: ${JSON.stringify(airo.devCommand)})`,
     )
-  }
-  if (!dev) {
-    errors.push(`.airo/config.json devCommand must be "${PROD_START}" (Preview must not default to npm run dev)`)
   }
 
   for (const [label, cmd] of [
     ['buildCommand', build],
     ['serveCommand', serve],
-    ['devCommand', dev],
+    ...(dev ? [['devCommand', dev]] : []),
   ]) {
     errors.push(...assertProductionHostingCommand(label, cmd))
+  }
+
+  const install = normalizeHostingCommand(airo.installCommand)
+  if (install && install !== 'npm ci --omit=dev' && install !== 'npm ci --omit=dev --ignore-scripts') {
+    errors.push(
+      `.airo/config.json installCommand should be "npm ci --omit=dev" (got: ${JSON.stringify(airo.installCommand)})`,
+    )
   }
 
   const pm = airo.packageManager
@@ -202,8 +210,9 @@ export function effectiveGoDaddyCommands() {
     installLockfile: 'package-lock.json',
     packageManagerField: pkg.packageManager ?? '',
     devCommand: airo?.devCommand ?? '',
-    buildCommand: airo?.buildCommand ?? PROD_BUILD,
-    serveCommand: airo?.serveCommand ?? PROD_START,
+    buildCommand: airo?.buildCommand ?? CANONICAL_BUILD,
+    serveCommand: airo?.serveCommand ?? CANONICAL_START,
+    installCommand: airo?.installCommand ?? 'npm ci --omit=dev',
     packageJsonBuildScript: pkg.scripts?.build ?? '',
     packageJsonStartScript: pkg.scripts?.start ?? '',
   }

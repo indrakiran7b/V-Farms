@@ -1,7 +1,6 @@
 {
-  "buildCommand": "NODE_ENV=production npm run build",
-  "serveCommand": "NODE_ENV=production npm start",
-  "devCommand": "NODE_ENV=production npm start",
-  "installCommand": "npm ci --omit=dev --ignore-scripts",
+  "buildCommand": "npm run build",
+  "serveCommand": "npm start",
+  "installCommand": "npm ci --omit=dev",
   "packageManager": "npm"
 }

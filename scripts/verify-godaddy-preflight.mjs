@@ -94,7 +94,7 @@ function main() {
   if (existsSync(join(tmp, '.next'))) rmSync(join(tmp, '.next'), { recursive: true, force: true })
 
   console.log('verify-godaddy-preflight: simulating GoDaddy production-only install (npm ci --omit=dev)…')
-  code = run('npm', ['ci', '--omit=dev', '--ignore-scripts'], tmp)
+  code = run('npm', ['ci', '--omit=dev'], tmp)
   if (code !== 0) {
     rmSync(tmp, { recursive: true, force: true })
     process.exit(code)

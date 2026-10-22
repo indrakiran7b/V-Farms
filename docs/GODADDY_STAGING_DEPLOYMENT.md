@@ -100,6 +100,10 @@ The public [deploy contract](https://github.com/godaddy/nodejs-hosting-agent-ski
   - `packageManager`: `npm`
   If runtime logs show **`> next dev`**, **`Turbopack`**, or **`Watchpack Error: EACCES … scandir '/'`**, the host is running the **development server** — fix **Settings → Build / Run** (and any Preview “development mode” toggle) to match the commands above, then **Update Preview**.
 
+**Preview still runs `next dev` / Turbopack:** Some Airo Preview flows invoke **`npm run dev`** regardless of `.airo` `devCommand`. This repo’s **`dev` script** (`scripts/dev-server.mjs`) detects GoDaddy’s **`/app`** working directory and runs **`npm run build`** + **`npm start`** instead of Turbopack. After pull, confirm **Runtime Logs** show **`next start`**, not **`next dev`**. Align **Settings → Build / Run** with the commands in [`.airo/config.schema.md`](../.airo/config.schema.md).
+
+**`.airo/config.json` Git conflict:** Accept repo build/serve/dev commands (see `.airo/config.schema.md`); preserve unrelated dashboard keys if present; **Update Preview**.
+
 **Publish / runtime logs (`pnpm-native EACCES` or `next dev`):** **Publish** may reuse a stale preview artifact (`Archive size: 225MB+`, `node_modules and build output present from preview - serving directly`) or dashboard overrides (`pnpm start`, `npm run dev`). Fix order: (1) **Settings → Build/Run** — build `NODE_ENV=production npm run build`, start/dev `NODE_ENV=production npm start`; (2) **Update Preview** on `feature/staging-prep`; (3) **Runtime Logs** must show **`next start`** / **`next build --webpack`**, never **`next dev`** or **pnpm**; (4) then **Publish to Live**.
 
 **Turbopack on PaaS:** Next.js 16 defaults to Turbopack for `next build`, which can fail on restricted hosts (e.g. `globals.css` / OS error 13 when spawning a helper that binds a port). This repo uses **`next build --webpack`** (supported in Next 16.4.0 per `next build --help`).

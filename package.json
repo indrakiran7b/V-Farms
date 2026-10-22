@@ -6,7 +6,7 @@
     "node": "22.x"
   },
   "scripts": {
-    "dev": "next dev",
+    "dev": "node scripts/dev-server.mjs",
     "build": "next build --webpack",
     "prestart": "node scripts/assert-next-production-build.mjs",
     "start": "next start",
